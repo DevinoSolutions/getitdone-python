@@ -1,0 +1,19 @@
+{
+  "date": "2026-08-05",
+  "sections": [
+    {
+      "section": "TODO",
+      "status": "COMPLETED",
+      "entries": [
+        {
+          "id": "sample",
+          "section": "TODO",
+          "task_id": "T-123",
+          "title": "sample",
+          "status": "TODO",
+          "created_at": "2026-08-05T12:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}

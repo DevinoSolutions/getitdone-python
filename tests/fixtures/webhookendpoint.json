@@ -1,0 +1,12 @@
+{
+  "id": "sample",
+  "url": "sample",
+  "enabled": true,
+  "event_types": [
+    "task.created"
+  ],
+  "verified": true,
+  "disabled_reason": "sample",
+  "created_at": "2026-08-05T12:00:00.000Z",
+  "updated_at": "2026-08-05T12:00:00.000Z"
+}
