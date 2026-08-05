@@ -16,6 +16,8 @@ env/
 .mypy_cache/
 .coverage
 coverage.xml
+cov.json
+cov-summary.txt
 htmlcov/
 
 # Env / secrets — never commit keys
