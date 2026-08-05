@@ -14,6 +14,15 @@ import httpx
 
 from getitdone_py._http import AsyncHttpCore, HttpCore, HttpMethod, RequestOptions, RequestParams
 from getitdone_py.errors import GetItDoneError
+from getitdone_py.resources.api_keys import ApiKeys, AsyncApiKeys
+from getitdone_py.resources.attachments import AsyncAttachments, Attachments
+from getitdone_py.resources.daily_plan import AsyncDailyPlan, DailyPlan
+from getitdone_py.resources.members import AsyncMembers, Members
+from getitdone_py.resources.organizations import AsyncOrganizations, Organizations
+from getitdone_py.resources.projects import AsyncProjects, Projects
+from getitdone_py.resources.tasks import AsyncTasks, Tasks
+from getitdone_py.resources.usage import AsyncUsage, Usage
+from getitdone_py.resources.webhook_endpoints import AsyncWebhookEndpoints, WebhookEndpoints
 
 DEFAULT_BASE_URL = "https://app.nowgetitdone.com"
 DEFAULT_TIMEOUT = 60.0
@@ -83,6 +92,16 @@ class GetItDone:
             http_client=http_client,
         )
 
+        self.organizations = Organizations(self._core)
+        self.members = Members(self._core)
+        self.projects = Projects(self._core)
+        self.tasks = Tasks(self._core)
+        self.daily_plan = DailyPlan(self._core)
+        self.attachments = Attachments(self._core)
+        self.api_keys = ApiKeys(self._core)
+        self.webhook_endpoints = WebhookEndpoints(self._core)
+        self.usage = Usage(self._core)
+
     def request(
         self,
         method: HttpMethod,
@@ -150,6 +169,16 @@ class AsyncGetItDone:
             default_headers=default_headers,
             http_client=http_client,
         )
+
+        self.organizations = AsyncOrganizations(self._core)
+        self.members = AsyncMembers(self._core)
+        self.projects = AsyncProjects(self._core)
+        self.tasks = AsyncTasks(self._core)
+        self.daily_plan = AsyncDailyPlan(self._core)
+        self.attachments = AsyncAttachments(self._core)
+        self.api_keys = AsyncApiKeys(self._core)
+        self.webhook_endpoints = AsyncWebhookEndpoints(self._core)
+        self.usage = AsyncUsage(self._core)
 
     async def request(
         self,
