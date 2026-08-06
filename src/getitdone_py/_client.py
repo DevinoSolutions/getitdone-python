@@ -54,7 +54,7 @@ def _resolve_base_url(base_url: str | None) -> str:
 def _user_agent() -> str:
     from getitdone_py import __version__
 
-    return f"getitdone-py/{__version__}"
+    return f"getitdone-sdk/{__version__}"
 
 
 class GetItDone:

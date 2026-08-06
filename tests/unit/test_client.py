@@ -73,7 +73,7 @@ def test_every_request_carries_bearer_auth_a_custom_user_agent_and_accept_json()
 
     headers = route.calls[0].request.headers
     assert headers["authorization"] == "Bearer gid_secret"
-    assert headers["user-agent"] == f"getitdone-py/{__version__}"
+    assert headers["user-agent"] == f"getitdone-sdk/{__version__}"
     assert headers["accept"] == "application/json"
     # /v1 is Bearer-ONLY: the legacy x-api-key scheme is never sent.
     assert "x-api-key" not in headers
@@ -89,7 +89,7 @@ def test_a_default_python_user_agent_is_never_sent():
     user_agent = route.calls[0].request.headers["user-agent"]
     assert "python" not in user_agent.lower()
     assert "httpx" not in user_agent.lower()
-    assert user_agent.startswith("getitdone-py/")
+    assert user_agent.startswith("getitdone-sdk/")
 
 
 @respx.mock
@@ -188,7 +188,7 @@ async def test_the_async_client_sends_the_same_headers():
 
     headers = route.calls[0].request.headers
     assert headers["authorization"] == "Bearer gid_secret"
-    assert headers["user-agent"] == f"getitdone-py/{__version__}"
+    assert headers["user-agent"] == f"getitdone-sdk/{__version__}"
 
 
 async def test_the_async_client_reads_the_same_env_vars(monkeypatch: pytest.MonkeyPatch):

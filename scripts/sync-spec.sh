@@ -18,7 +18,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 target="$repo_root/openapi/v1.json"
 version="$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' "$repo_root/src/getitdone_py/__init__.py")"
-user_agent="getitdone-py/${version}"
+user_agent="getitdone-sdk/${version}"
 
 if [[ -n "${GETITDONE_MONOREPO:-}" ]]; then
   source_file="$GETITDONE_MONOREPO/packages/api-contracts/openapi/v1.json"

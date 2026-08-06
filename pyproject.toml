@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "getitdone-py"
+name = "getitdone-sdk"
 dynamic = ["version"]
 description = "Official Python SDK for the GetItDone API — AI-native task management for people and agents."
 readme = "README.md"

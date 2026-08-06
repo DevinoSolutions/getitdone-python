@@ -1,4 +1,4 @@
-# GetItDone Python SDK (`getitdone-py`)
+# GetItDone Python SDK (`getitdone-sdk`)
 
 The official Python SDK for the [GetItDone](https://nowgetitdone.com) API — AI-native task
 management for people and agents.
@@ -10,10 +10,12 @@ hierarchy, and a Standard Webhooks verifier.
 ## Install
 
 ```bash
-pip install getitdone-py
+pip install getitdone-sdk
 ```
 
-Requires Python 3.10+.
+Requires Python 3.10+. The distribution is published as **`getitdone-sdk`**, but the import
+package is **`getitdone_py`** — `pip install getitdone-sdk`, then `from getitdone_py import
+GetItDone`.
 
 ## Authentication
 
@@ -229,7 +231,7 @@ from getitdone_py import RequestOptions
 client.tasks.list(options=RequestOptions(timeout=5.0, max_retries=0, headers={"X-Trace": "abc"}))
 ```
 
-The SDK always sends `User-Agent: getitdone-py/<version>`. Do not remove it — the API's edge
+The SDK always sends `User-Agent: getitdone-sdk/<version>`. Do not remove it — the API's edge
 rejects default Python user agents with `403 error code: 1010`.
 
 Escape hatch for anything not yet wrapped:

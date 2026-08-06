@@ -1,6 +1,6 @@
 # This workflow uses PyPI Trusted Publishing (OIDC) — no API token/password. It will
-# FAIL until a trusted publisher for the `getitdone-py` project is registered on PyPI:
-#   PyPI -> project `getitdone-py` -> Publishing -> add GitHub publisher:
+# FAIL until a trusted publisher for the `getitdone-sdk` project is registered on PyPI:
+#   PyPI -> project `getitdone-sdk` -> Publishing -> add GitHub publisher:
 #   owner: DevinoSolutions, repo: getitdone-python, workflow: publish.yml,
 #   environment: pypi
 # Do NOT dispatch this workflow before that is done.

@@ -24,7 +24,7 @@ from getitdone_py import AuthenticationError, GetItDone, __version__
 
 PROD_BASE_URL = "https://app.nowgetitdone.com"
 PUBLIC_SPEC_URL = "https://nowgetitdone.com/docs/api/openapi.json"
-SDK_USER_AGENT = f"getitdone-py/{__version__}"
+SDK_USER_AGENT = f"getitdone-sdk/{__version__}"
 
 
 @pytest.fixture(scope="module")

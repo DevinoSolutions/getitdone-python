@@ -263,7 +263,7 @@ class _CoreBase:
 
         delay = retry_after if retry_after is not None else backoff_seconds(attempt)
         logger.warning(
-            "getitdone-py retrying request",
+            "getitdone-sdk retrying request",
             extra={
                 "method": params.method,
                 "path": params.path,
@@ -285,7 +285,7 @@ class _CoreBase:
 
     def _log_request(self, params: RequestParams, prepared: _Prepared) -> None:
         logger.debug(
-            "getitdone-py request",
+            "getitdone-sdk request",
             extra={
                 "method": params.method,
                 "url": prepared.url,

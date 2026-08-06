@@ -49,7 +49,7 @@ def main() -> int:
         response = httpx.get(
             PUBLIC_SPEC_URL,
             headers={
-                "User-Agent": f"getitdone-py/{read_version()}",
+                "User-Agent": f"getitdone-sdk/{read_version()}",
                 "Accept": "application/json",
             },
             timeout=60.0,
