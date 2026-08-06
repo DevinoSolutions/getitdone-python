@@ -13,6 +13,7 @@ import contextlib
 import os
 import uuid
 from collections.abc import Iterator
+from datetime import datetime, timezone
 from typing import Any
 
 import pytest
@@ -91,7 +92,11 @@ class TestReadPaths:
             Task.model_validate(task)
 
     def test_the_daily_plan_is_reachable(self, client: GetItDone):
-        plan = client.daily_plan.retrieve()
+        # `date` is REQUIRED by the contract (openapi/v1.json, GET /v1/daily-plan,
+        # parameter `date`, required: true). Omitting it is a 400 validation_failed
+        # with pointer /date, not a server-side "today" default.
+        today = datetime.now(timezone.utc).date().isoformat()
+        plan = client.daily_plan.retrieve({"date": today})
         assert "date" in plan
         assert "sections" in plan
 
@@ -150,10 +155,13 @@ class TestWriteAndIdempotency:
         task_id = smoke_task["id"]
         assert task_id.startswith("T-")
 
-        updated = client.tasks.update(task_id, {"status": "DONE"})
-        assert updated["status"] == "DONE"
+        # TaskStatus is TODO|IN_PROGRESS|IN_REVIEW|COMPLETED|BLOCKED
+        # (openapi/v1.json, components.schemas.TaskStatus). "DONE" is not a member
+        # and prod rejects it with 400 validation_failed at pointer /status.
+        updated = client.tasks.update(task_id, {"status": "COMPLETED"})
+        assert updated["status"] == "COMPLETED"
 
-        assert client.tasks.retrieve(task_id)["status"] == "DONE"
+        assert client.tasks.retrieve(task_id)["status"] == "COMPLETED"
 
         history = client.tasks.list_history(task_id).page()
         assert isinstance(history.data, list)

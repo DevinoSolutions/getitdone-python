@@ -19,7 +19,12 @@ class DailyPlan(Resource):
         *,
         options: RequestOptions | None = None,
     ) -> Any:
-        """`getDailyPlan` — the board for a date (defaults to today, UTC)."""
+        """`getDailyPlan` — the board for a date.
+
+        ``query["date"]`` is REQUIRED (``YYYY-MM-DD``). There is no server-side
+        "today" default: omitting it returns 400 ``validation_failed`` with an
+        error pointer of ``/date``.
+        """
         return self._request("GET", "/v1/daily-plan", query=query, options=options)
 
     def set_status(
@@ -79,7 +84,7 @@ class AsyncDailyPlan(AsyncResource):
         *,
         options: RequestOptions | None = None,
     ) -> Any:
-        """`getDailyPlan`"""
+        """`getDailyPlan` — ``query["date"]`` is REQUIRED; see :meth:`DailyPlan.retrieve`."""
         return await self._request("GET", "/v1/daily-plan", query=query, options=options)
 
     async def set_status(
