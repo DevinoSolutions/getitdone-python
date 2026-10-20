@@ -3,7 +3,7 @@
 The official Python SDK for the [GetItDone](https://nowgetitdone.com) API — AI-native task
 management for people and agents.
 
-All 37 `/v1` operations, fully typed (`py.typed`), **sync and async**, on `httpx`. Automatic
+All 42 `/v1` operations, fully typed (`py.typed`), **sync and async**, on `httpx`. Automatic
 retries, automatic `Idempotency-Key` handling, cursor auto-pagination, a typed RFC 9457 error
 hierarchy, and a Standard Webhooks verifier.
 
@@ -77,7 +77,7 @@ asyncio.run(main())
 | `client.organizations` | `list`, `retrieve` |
 | `client.members` | `list` |
 | `client.projects` | `list`, `retrieve`, `create` |
-| `client.tasks` | `list`, `retrieve`, `create`, `update`, `archive`, `unarchive`, `list_history` |
+| `client.tasks` | `list`, `retrieve`, `create`, `update`, `archive`, `unarchive`, `list_history`, `retrieve_dependencies`, `add_dependency`, `remove_dependency`, `list_occurrences`, `set_occurrence_status` |
 | `client.daily_plan` | `retrieve`, `set_status`, `create_entry`, `move_entry`, `delete_entry` |
 | `client.attachments` | `list`, `create_upload`, `create`, `get_download_url` |
 | `client.api_keys` | `list`, `create`, `delete` |
@@ -89,7 +89,7 @@ Webhook-endpoint operations require a **PRO or higher** plan; on a lower plan th
 
 ## Pagination
 
-The nine list operations are cursor-paginated. Iterating walks every page for you, re-sending
+The ten list operations are cursor-paginated. Iterating walks every page for you, re-sending
 your original query verbatim and only advancing the cursor:
 
 ```python
@@ -111,7 +111,7 @@ The async twin is `async for task in client.tasks.list(): ...`, with `await pagi
 
 ## Idempotency
 
-Ten POSTs are declared idempotent by the API. For those the SDK generates an `Idempotency-Key`
+Eleven POSTs are declared idempotent by the API. For those the SDK generates an `Idempotency-Key`
 **once per logical call**, so a retried request replays the stored result instead of executing
 twice. Supply your own key to make a retry safe across process restarts:
 

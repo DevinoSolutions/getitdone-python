@@ -91,7 +91,7 @@ jobs:
           from getitdone_py import GetItDone, AsyncGetItDone
           from getitdone_py.webhooks import verify_webhook
           from getitdone_py.models import Task, Problem
-          assert getitdone_py.__version__ == '0.1.0', getitdone_py.__version__
+          assert getitdone_py.__version__ == '0.2.0', getitdone_py.__version__
           marker = pathlib.Path(getitdone_py.__file__).parent / 'py.typed'
           assert marker.is_file(), 'py.typed missing from the wheel'
           client = GetItDone(api_key='gid_smoke')

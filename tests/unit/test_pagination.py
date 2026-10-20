@@ -131,13 +131,14 @@ def test_a_list_method_returns_a_lazy_paginator_that_has_not_called_the_api_yet(
         ("api_keys.list", (), "/v1/api-keys"),
         ("tasks.list", (), "/v1/tasks"),
         ("tasks.list_history", ("T-1",), "/v1/tasks/T-1/history"),
+        ("tasks.list_occurrences", ("T-1",), "/v1/tasks/T-1/occurrences"),
         ("attachments.list", ("T-1",), "/v1/tasks/T-1/attachments"),
         ("webhook_endpoints.list", (), "/v1/webhook-endpoints"),
         ("webhook_endpoints.list_deliveries", ("we_1",), "/v1/webhook-endpoints/we_1/deliveries"),
     ],
 )
 @respx.mock
-def test_all_nine_paginated_lists_auto_iterate(accessor: str, args: tuple, path: str):
+def test_all_ten_paginated_lists_auto_iterate(accessor: str, args: tuple, path: str):
     route = respx.get(f"{BASE}{path}").mock(
         side_effect=[
             httpx.Response(200, json=envelope(["a"], "cur_1")),

@@ -89,12 +89,40 @@ class UpdateTaskBody(BaseModel):
     priority: Literal['LOW', 'MEDIUM', 'HIGH', 'URGENT'] | None = Field(
         None, description='Task priority level.'
     )
+    start_date: _Date | None = Field(
+        None,
+        description='New start date (defer-until) as YYYY-MM-DD (interpreted as UTC). Cannot be cleared — the shared update operation treats absence as "keep".',
+    )
     due_date: _Date | None = Field(
         None,
         description='New due date as YYYY-MM-DD (interpreted as UTC). Cannot be cleared — the shared update operation treats absence as "keep".',
     )
     notes: str | None = Field(None, max_length=100000)
     story_points: float | None = Field(None, ge=0.0, le=1000.0)
+
+
+class SetTaskOccurrenceStatusBody(BaseModel):
+    """
+    The new state for this one day of the series.
+    """
+
+    status: Literal['COMPLETED', 'SKIPPED'] = Field(
+        ...,
+        description='`COMPLETED` = the work for that day is done (records the completion instant and actor). `SKIPPED` = it will not be done and the day is closed rather than rolled over.',
+    )
+
+
+class AddTaskDependencyBody(BaseModel):
+    """
+    The blocker to record for the task in the path.
+    """
+
+    blocker_task_id: str = Field(
+        ...,
+        description='The task that must finish FIRST. It must be in the same organization as the task in the path.',
+        examples=['T-123'],
+        pattern='^(?:T-)?[0-9]{1,12}$',
+    )
 
 
 class CreateDailyPlanEntryBody(BaseModel):
@@ -180,7 +208,7 @@ class UpdateWebhookEndpointBody(BaseModel):
     ) = Field(None, description='Replaces the full subscribed-type set.')
     enabled: bool | None = Field(
         None,
-        description='Enable or disable delivery. Re-enabling (false → true) clears any prior auto-disable reason and resets the consecutive-failure counter.',
+        description='Enable or disable delivery. Disabling holds every delivery already queued for the endpoint (they are not sent while it is disabled). Re-enabling (false → true) clears any prior auto-disable reason and resets the consecutive-failure counter; deliveries held while it was off then resume.',
     )
 
 
@@ -465,6 +493,13 @@ class RevokedApiKey(BaseModel):
     )
 
 
+class StartDate(RootModel[datetime]):
+    root: datetime = Field(
+        ...,
+        description='Start date (defer-until), ISO-8601 UTC, or null. The task is not meant to be worked on before this day.',
+    )
+
+
 class DueDate(RootModel[datetime]):
     root: datetime = Field(
         ...,
@@ -472,51 +507,40 @@ class DueDate(RootModel[datetime]):
     )
 
 
-class Task(BaseModel):
-    """
-    A task, projected from its stable identity plus its CURRENT version.
-    """
+class ByWeekdayItem(RootModel[int]):
+    root: int = Field(..., ge=-9007199254740991, le=9007199254740991)
 
-    model_config = ConfigDict(
-        extra='allow',
-    )
-    id: str = Field(
+
+class ByMonthDay(RootModel[int]):
+    root: int = Field(
         ...,
-        description='The task short id — the ONE public task identifier.',
-        examples=['T-123'],
+        description='MONTHLY only: day of the month, 1-31, clamped to the last day of shorter months (31 lands on Feb 28, or Feb 29 in a leap year). Null otherwise.',
+        ge=-9007199254740991,
+        le=9007199254740991,
     )
-    title: str = Field(..., examples=['Ship the public API'])
-    description: str | None = Field(
-        ..., description='Free-text description, or null when unset.'
-    )
-    status: Literal['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'BLOCKED'] = Field(
-        ..., description='Task workflow status.'
-    )
-    priority: Literal['LOW', 'MEDIUM', 'HIGH', 'URGENT'] | None = None
-    due_date: DueDate | None = Field(
-        ..., description='Due date, ISO-8601 UTC, or null.'
-    )
-    notes: str | None = Field(
-        ..., description='Rich-text notes of the current version, or null.'
-    )
-    story_points: float | None = None
-    project_ids: list[str] = Field(
+
+
+class EndDate(RootModel[str]):
+    root: str = Field(
         ...,
-        description='Ids of the projects the CURRENT version is linked to (a task can belong to several).',
+        description='The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.',
+        examples=['2026-08-06'],
+        pattern='^\\d{4}-\\d{2}-\\d{2}$',
     )
-    parent_task_id: str | None = Field(
+
+
+class MaxOccurrences(RootModel[int]):
+    root: int = Field(
         ...,
-        description="The parent task's short id when this is a subtask, else null.",
-        examples=['T-99'],
+        description='Total number of occurrences the schedule stops after (RRULE COUNT), or null.',
+        ge=-9007199254740991,
+        le=9007199254740991,
     )
-    archived: bool
-    created_at: datetime = Field(
+
+
+class StartDate1(RootModel[datetime]):
+    root: datetime = Field(
         ...,
-        description='Task creation time (first version), ISO-8601 UTC.',
-    )
-    updated_at: datetime = Field(
-        ...,
-        description='Last content change (current version), ISO-8601 UTC.',
     )
 
 
@@ -544,12 +568,82 @@ class TaskHistoryEntry(BaseModel):
         ..., description='Task workflow status.'
     )
     priority: Literal['LOW', 'MEDIUM', 'HIGH', 'URGENT'] | None = None
+    start_date: StartDate1 | None = None
     due_date: DueDate1 | None = None
     notes: str | None = None
     story_points: float | None = None
     created_at: datetime = Field(
         ...,
         description='When this version was written, ISO-8601 UTC.',
+    )
+
+
+class CompletedAt(RootModel[datetime]):
+    root: datetime = Field(
+        ...,
+        description='The INSTANT the user completed this day, ISO-8601 UTC, or null. Deliberately distinct from `occurrence_date`: completing Tuesday on Monday records both truths.',
+    )
+
+
+class TaskOccurrence(BaseModel):
+    """
+    One DAY of a repeating task, with its own completion state.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    task_id: str = Field(
+        ..., description="The repeating task's short id.", examples=['T-123']
+    )
+    occurrence_date: str = Field(
+        ...,
+        description='The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.',
+        examples=['2026-08-06'],
+        pattern='^\\d{4}-\\d{2}-\\d{2}$',
+    )
+    sequence: int = Field(
+        ...,
+        description='1-based ordinal of this day within the series — what an RRULE COUNT limit and streak math count.',
+        examples=[12],
+        ge=-9007199254740991,
+        le=9007199254740991,
+    )
+    status: Literal['PENDING', 'COMPLETED', 'SKIPPED', 'MISSED'] = Field(
+        ...,
+        description='Per-day state of one occurrence of a repeating task. `PENDING` is written by materialization and `MISSED` by the rollover sweep — only `COMPLETED` and `SKIPPED` are user-written.',
+    )
+    completed_at: CompletedAt | None = Field(
+        ...,
+        description='The INSTANT the user completed this day, ISO-8601 UTC, or null. Deliberately distinct from `occurrence_date`: completing Tuesday on Monday records both truths.',
+    )
+
+
+class TaskDependencyRef(BaseModel):
+    """
+    A task on the other end of a dependency link.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    task_id: str = Field(
+        ...,
+        description='Task short id, e.g. `T-123` (a bare `123` is also accepted on input).',
+        examples=['T-123'],
+        pattern='^(?:T-)?[0-9]{1,12}$',
+    )
+    title: str = Field(
+        ...,
+        description="The other task's title (its current version).",
+        examples=['Ship the public API'],
+    )
+    status: Literal['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'BLOCKED'] = Field(
+        ..., description='Task workflow status.'
+    )
+    open: bool = Field(
+        ...,
+        description='Whether this task is still outstanding — not COMPLETED and not archived. Only OPEN blockers hold work back, so this is the flag `is_blocked` aggregates.',
     )
 
 
@@ -686,7 +780,7 @@ class WebhookEndpoint(BaseModel):
     url: str = Field(..., description='The https destination URL.')
     enabled: bool = Field(
         ...,
-        description='False when disabled — manually, or auto-disabled after repeated delivery failures (see `disabled_reason`).',
+        description='False when disabled — manually, auto-disabled after repeated delivery failures, or paused when the account that set it up had its email address verified (see `disabled_reason`). A disabled endpoint receives nothing: deliveries already queued for it are held, not sent, and go out only if it is re-enabled.',
     )
     event_types: list[Literal['task.created', 'task.updated', 'task.archived']] = Field(
         ..., description='Subscribed event types. An EMPTY array means "every type".'
@@ -697,7 +791,7 @@ class WebhookEndpoint(BaseModel):
     )
     disabled_reason: str | None = Field(
         ...,
-        description='Why the endpoint was auto-disabled, or null when never auto-disabled.',
+        description='Why the endpoint was auto-disabled or paused by an account take-back, or null when it never was.',
     )
     created_at: datetime = Field(
         ...,
@@ -721,7 +815,7 @@ class CreatedWebhookEndpoint(BaseModel):
     url: str = Field(..., description='The https destination URL.')
     enabled: bool = Field(
         ...,
-        description='False when disabled — manually, or auto-disabled after repeated delivery failures (see `disabled_reason`).',
+        description='False when disabled — manually, auto-disabled after repeated delivery failures, or paused when the account that set it up had its email address verified (see `disabled_reason`). A disabled endpoint receives nothing: deliveries already queued for it are held, not sent, and go out only if it is re-enabled.',
     )
     event_types: list[Literal['task.created', 'task.updated', 'task.archived']] = Field(
         ..., description='Subscribed event types. An EMPTY array means "every type".'
@@ -732,7 +826,7 @@ class CreatedWebhookEndpoint(BaseModel):
     )
     disabled_reason: str | None = Field(
         ...,
-        description='Why the endpoint was auto-disabled, or null when never auto-disabled.',
+        description='Why the endpoint was auto-disabled or paused by an account take-back, or null when it never was.',
     )
     created_at: datetime = Field(
         ...,
@@ -772,7 +866,7 @@ class RotatedWebhookEndpointSecret(BaseModel):
     url: str = Field(..., description='The https destination URL.')
     enabled: bool = Field(
         ...,
-        description='False when disabled — manually, or auto-disabled after repeated delivery failures (see `disabled_reason`).',
+        description='False when disabled — manually, auto-disabled after repeated delivery failures, or paused when the account that set it up had its email address verified (see `disabled_reason`). A disabled endpoint receives nothing: deliveries already queued for it are held, not sent, and go out only if it is re-enabled.',
     )
     event_types: list[Literal['task.created', 'task.updated', 'task.archived']] = Field(
         ..., description='Subscribed event types. An EMPTY array means "every type".'
@@ -783,7 +877,7 @@ class RotatedWebhookEndpointSecret(BaseModel):
     )
     disabled_reason: str | None = Field(
         ...,
-        description='Why the endpoint was auto-disabled, or null when never auto-disabled.',
+        description='Why the endpoint was auto-disabled or paused by an account take-back, or null when it never was.',
     )
     created_at: datetime = Field(
         ...,
@@ -914,6 +1008,10 @@ class CreateTaskBody(BaseModel):
     priority: Literal['LOW', 'MEDIUM', 'HIGH', 'URGENT'] | None = Field(
         None, description='Task priority level.'
     )
+    start_date: _Date | None = Field(
+        None,
+        description='Start date (defer-until) as YYYY-MM-DD (interpreted as UTC).',
+    )
     due_date: _Date | None = Field(
         None,
         description='Due date as YYYY-MM-DD (interpreted as UTC).',
@@ -1027,6 +1125,7 @@ class Problem(BaseModel):
         'idempotency_in_progress',
         'webhook_url_rejected',
         'delivery_already_pending',
+        'dependency_cycle',
         'internal_error',
     ] = Field(
         ...,
@@ -1126,21 +1225,68 @@ class ApiKeyList(BaseModel):
     )
 
 
-class TaskList(BaseModel):
+class TaskRecurrence(BaseModel):
     """
-    Cursor-envelope page of tasks, most recently updated first.
+    A task's repeat schedule. Each day is completed independently through the task-occurrence operations.
     """
 
     model_config = ConfigDict(
         extra='allow',
     )
-    data: list[Task] = Field(..., description='The current page of results.')
-    has_more: bool = Field(
-        ..., description='True when another page exists after this one.'
-    )
-    next_cursor: str | None = Field(
+    frequency: Literal['DAILY', 'WEEKLY', 'MONTHLY'] = Field(
         ...,
-        description='Opaque cursor for the next page (pass as `after`); null on the last page.',
+        description='How often a repeating task recurs — the RRULE `FREQ` this rule projects to.',
+    )
+    interval: int = Field(
+        ...,
+        description='Repeat every N units of `frequency` — 2 with WEEKLY is "every other week".',
+        examples=[1],
+        ge=-9007199254740991,
+        le=9007199254740991,
+    )
+    by_weekday: list[ByWeekdayItem] = Field(
+        ...,
+        description='WEEKLY only: the weekdays it falls on, 0 = Sunday through 6 = Saturday (`[1,2,3,4,5]` is "every weekday"). Empty for DAILY and MONTHLY.',
+    )
+    by_month_day: ByMonthDay | None = Field(
+        ...,
+        description='MONTHLY only: day of the month, 1-31, clamped to the last day of shorter months (31 lands on Feb 28, or Feb 29 in a leap year). Null otherwise.',
+    )
+    basis: Literal['SCHEDULE', 'AFTER_COMPLETION'] = Field(
+        ...,
+        description='Whether the next day is measured from the calendar (`SCHEDULE`) or from the day the previous occurrence was completed (`AFTER_COMPLETION`).',
+    )
+    timezone: str = Field(
+        ...,
+        description='IANA timezone whose CALENDAR DAYS the occurrences fall on.',
+        examples=['America/Toronto'],
+    )
+    start_date: str = Field(
+        ...,
+        description='First day the task may recur (RRULE DTSTART). No occurrence is ever created before it.',
+        examples=['2026-08-06'],
+        pattern='^\\d{4}-\\d{2}-\\d{2}$',
+    )
+    end_date: EndDate | None = Field(
+        ...,
+        description='Last day the task may recur (RRULE UNTIL), or null for a schedule with no end date.',
+    )
+    max_occurrences: MaxOccurrences | None = Field(
+        ...,
+        description='Total number of occurrences the schedule stops after (RRULE COUNT), or null.',
+    )
+    rollover_enabled: bool = Field(
+        ...,
+        description='When true, an unfinished occurrence keeps surfacing on later days instead of silently vanishing.',
+    )
+    active: bool = Field(
+        ...,
+        description='False once the schedule was stopped (cleared, series completed, or task archived). Past occurrences are KEPT either way — completion history is never rewritten.',
+    )
+    rrule: str = Field(
+        ...,
+        description='RFC 5545 projection of the fields above, derived on read — never stored, never accepted on input.',
+        examples=['FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'],
     )
 
 
@@ -1161,6 +1307,66 @@ class TaskHistoryList(BaseModel):
     next_cursor: str | None = Field(
         ...,
         description='Opaque cursor for the next page (pass as `after`); null on the last page.',
+    )
+
+
+class TaskOccurrenceList(BaseModel):
+    """
+    Cursor-envelope page of occurrences, most recent day first. A task that does not repeat answers an empty page.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    data: list[TaskOccurrence] = Field(..., description='The current page of results.')
+    has_more: bool = Field(
+        ..., description='True when another page exists after this one.'
+    )
+    next_cursor: str | None = Field(
+        ...,
+        description='Opaque cursor for the next page (pass as `after`); null on the last page.',
+    )
+
+
+class TaskDependencies(BaseModel):
+    """
+    Both directions of a task's blocker graph, one hop out, plus its derived blocked state.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    task_id: str = Field(
+        ...,
+        description='The task this view is for.',
+        examples=['T-123'],
+        pattern='^(?:T-)?[0-9]{1,12}$',
+    )
+    is_blocked: bool = Field(
+        ...,
+        description="DERIVED on every read: true when at least one entry in `blocked_by` is still `open`. Never a stored column and never written to the task's `status` — a blocked task keeps whatever status its owner set.",
+    )
+    blocked_by_count: int = Field(
+        ...,
+        description='How many tasks must finish first, open or not — `blocked_by.length`.',
+        examples=[2],
+        ge=-9007199254740991,
+        le=9007199254740991,
+    )
+    blocking_count: int = Field(
+        ...,
+        description='How many tasks wait on this one — `blocking.length`.',
+        examples=[1],
+        ge=-9007199254740991,
+        le=9007199254740991,
+    )
+    blocked_by: list[TaskDependencyRef] = Field(
+        ...,
+        description='Tasks that must finish before this one can be worked on, oldest link first.',
+    )
+    blocking: list[TaskDependencyRef] = Field(
+        ...,
+        description='Tasks waiting on this one, oldest link first — the other direction of the same edges.',
     )
 
 
@@ -1281,6 +1487,62 @@ class MemberList(BaseModel):
     )
 
 
+class Task(BaseModel):
+    """
+    A task, projected from its stable identity plus its CURRENT version.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    id: str = Field(
+        ...,
+        description='The task short id — the ONE public task identifier.',
+        examples=['T-123'],
+    )
+    title: str = Field(..., examples=['Ship the public API'])
+    description: str | None = Field(
+        ..., description='Free-text description, or null when unset.'
+    )
+    status: Literal['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'BLOCKED'] = Field(
+        ..., description='Task workflow status.'
+    )
+    priority: Literal['LOW', 'MEDIUM', 'HIGH', 'URGENT'] | None = None
+    start_date: StartDate | None = Field(
+        ...,
+        description='Start date (defer-until), ISO-8601 UTC, or null. The task is not meant to be worked on before this day.',
+    )
+    due_date: DueDate | None = Field(
+        ..., description='Due date, ISO-8601 UTC, or null.'
+    )
+    notes: str | None = Field(
+        ..., description='Rich-text notes of the current version, or null.'
+    )
+    story_points: float | None = None
+    project_ids: list[str] = Field(
+        ...,
+        description='Ids of the projects the CURRENT version is linked to (a task can belong to several).',
+    )
+    parent_task_id: str | None = Field(
+        ...,
+        description="The parent task's short id when this is a subtask, else null.",
+        examples=['T-99'],
+    )
+    archived: bool
+    recurrence: TaskRecurrence | None = Field(
+        ...,
+        description='The repeat schedule when this task recurs, else null. Per-day completion lives in the occurrence ledger (`/v1/tasks/{task_id}/occurrences`), never in `status` — completing Monday leaves Tuesday untouched.',
+    )
+    created_at: datetime = Field(
+        ...,
+        description='Task creation time (first version), ISO-8601 UTC.',
+    )
+    updated_at: datetime = Field(
+        ...,
+        description='Last content change (current version), ISO-8601 UTC.',
+    )
+
+
 class DailyPlan(BaseModel):
     """
     The credential user's daily board for one date in the credential's organization.
@@ -1295,4 +1557,22 @@ class DailyPlan(BaseModel):
     )
     sections: list[DailyPlanSection] = Field(
         ..., description='Always both sections: TODO then PROGRESS.'
+    )
+
+
+class TaskList(BaseModel):
+    """
+    Cursor-envelope page of tasks, most recently updated first.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    data: list[Task] = Field(..., description='The current page of results.')
+    has_more: bool = Field(
+        ..., description='True when another page exists after this one.'
+    )
+    next_cursor: str | None = Field(
+        ...,
+        description='Opaque cursor for the next page (pass as `after`); null on the last page.',
     )

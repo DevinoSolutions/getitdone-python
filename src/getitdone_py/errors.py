@@ -68,6 +68,7 @@ ProblemCode = Literal[
     "idempotency_in_progress",
     "webhook_url_rejected",
     "delivery_already_pending",
+    "dependency_cycle",
     "internal_error",
 ]
 
@@ -86,6 +87,7 @@ PROBLEM_CODES: tuple[str, ...] = (
     "idempotency_in_progress",
     "webhook_url_rejected",
     "delivery_already_pending",
+    "dependency_cycle",
     "internal_error",
 )
 
