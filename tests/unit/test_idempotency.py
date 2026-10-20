@@ -1,4 +1,4 @@
-"""Idempotency-Key semantics on the 10 declared-idempotent POSTs."""
+"""Idempotency-Key semantics on the 11 declared-idempotent POSTs."""
 
 from __future__ import annotations
 
@@ -11,13 +11,14 @@ from tests.helpers import spec_operations
 
 BASE = "https://api.test"
 
-#: The 10 POSTs the /v1 registry declares idempotent (x-idempotent: true).
+#: The 11 POSTs the /v1 registry declares idempotent (x-idempotent: true).
 IDEMPOTENT_OPERATIONS = [
     ("POST", "/v1/projects"),
     ("POST", "/v1/api-keys"),
     ("POST", "/v1/tasks"),
     ("POST", "/v1/tasks/T-1/archive"),
     ("POST", "/v1/tasks/T-1/unarchive"),
+    ("POST", "/v1/tasks/T-1/dependencies"),
     ("POST", "/v1/daily-plan/entries"),
     ("POST", "/v1/tasks/T-1/attachments/uploads"),
     ("POST", "/v1/tasks/T-1/attachments"),
@@ -34,7 +35,7 @@ NON_IDEMPOTENT_POSTS = [
 ]
 
 
-def test_the_spec_declares_exactly_ten_idempotent_operations():
+def test_the_spec_declares_exactly_eleven_idempotent_operations():
     idempotent = {op for op, (_, _, idem, _) in spec_operations().items() if idem}
     assert idempotent == {
         "createProject",
@@ -42,13 +43,14 @@ def test_the_spec_declares_exactly_ten_idempotent_operations():
         "createTask",
         "archiveTask",
         "unarchiveTask",
+        "addTaskDependency",
         "createDailyPlanEntry",
         "createAttachmentUpload",
         "createTaskAttachment",
         "createWebhookEndpoint",
         "rotateWebhookEndpointSecret",
     }
-    assert len(idempotent) == 10
+    assert len(idempotent) == 11
 
 
 @pytest.mark.parametrize(("method", "path"), IDEMPOTENT_OPERATIONS)

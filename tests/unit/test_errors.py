@@ -40,6 +40,7 @@ CODE_TO_EXPECTED = {
     "idempotency_in_progress": (409, ConflictError),
     "webhook_url_rejected": (422, UnprocessableEntityError),
     "delivery_already_pending": (409, ConflictError),
+    "dependency_cycle": (409, ConflictError),
     "internal_error": (500, InternalServerError),
 }
 
@@ -59,7 +60,7 @@ def test_the_sdk_code_vocabulary_matches_the_specs_problem_codes():
     spec = load_spec()
     spec_codes = set(spec["components"]["schemas"]["Problem"]["properties"]["code"]["enum"])
     assert set(PROBLEM_CODES) == spec_codes
-    assert len(PROBLEM_CODES) == 15
+    assert len(PROBLEM_CODES) == 16
 
 
 @pytest.mark.parametrize("code", sorted(CODE_TO_EXPECTED))

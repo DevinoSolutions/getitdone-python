@@ -12,7 +12,7 @@ AI-native task management for people and agents — https://nowgetitdone.com
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from getitdone_py._client import (
     DEFAULT_BASE_URL,

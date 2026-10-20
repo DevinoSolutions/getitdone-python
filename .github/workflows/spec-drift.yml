@@ -37,7 +37,8 @@ jobs:
         run: |
           existing=$(gh issue list --state open --search "OpenAPI spec drift in:title" --json number --jq '.[0].number')
           if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body-file drift-report.txt
+            # Refresh the single issue in place; a new comment per night buried it in bot noise.
+            gh issue edit "$existing" --body-file drift-report.txt
           else
             gh issue create \
               --title "OpenAPI spec drift: openapi/v1.json is behind production" \

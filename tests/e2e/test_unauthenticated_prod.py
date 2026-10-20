@@ -114,4 +114,4 @@ def test_the_public_openapi_document_is_reachable_and_matches_the_vendored_spec(
         "the live spec and openapi/v1.json disagree — run scripts/sync-spec.sh "
         "and scripts/regenerate-models.sh"
     )
-    assert len(live_operations) == 37
+    assert len(live_operations) == 42

@@ -47,6 +47,14 @@
             "description": "Tasks — the core work items. Public ids are product short ids (`T-123`); every content change is an immutable version, browsable via the history endpoint."
         },
         {
+            "name": "Task occurrences",
+            "description": "The per-day ledger of a repeating task — one date-keyed row per day it is due, each completed or skipped independently (including past days and days finished early)."
+        },
+        {
+            "name": "Task dependencies",
+            "description": "Finish-to-start links between tasks — what a task is blocked by and what it blocks. The graph is guaranteed acyclic, and blocked state is derived on read rather than stored."
+        },
+        {
             "name": "Daily plan",
             "description": "The credential user's per-date daily board: a TODO (plan) section and a PROGRESS section, each holding planned tasks."
         },
@@ -804,7 +812,7 @@
             "get": {
                 "operationId": "listProjects",
                 "summary": "List projects",
-                "description": "Cursor-paginated list of the credential's organization projects, newest first.",
+                "description": "Cursor-paginated list of the credential's organization projects, newest first. Archived projects are not listed.",
                 "tags": [
                     "Projects"
                 ],
@@ -3697,6 +3705,1232 @@
                     },
                     "400": {
                         "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/tasks/{task_id}/occurrences": {
+            "get": {
+                "operationId": "listTaskOccurrences",
+                "summary": "List a task's occurrences",
+                "description": "Cursor-paginated ledger of the days a repeating task is due, most recent day first. Filter with `status`, and with `starting_on` / `ending_on` for a calendar window (both inclusive, and both interpreted in the recurrence's own timezone). Future days already exist inside the materialization horizon — that is what makes completing early possible. A task that does not repeat answers an empty page rather than 404. Every filter is baked into the cursor: reusing an `after` cursor with different filters answers 400 `validation_failed`.",
+                "tags": [
+                    "Task occurrences"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:read"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "default": 25,
+                            "description": "Maximum number of items to return (1-100).",
+                            "example": 25,
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        },
+                        "description": "Maximum number of items to return (1-100)."
+                    },
+                    {
+                        "in": "query",
+                        "name": "after",
+                        "schema": {
+                            "description": "Opaque cursor from a previous page's `next_cursor` — omit for the first page. Reusing a cursor with DIFFERENT query parameters (e.g. a different `limit`) answers 400 `validation_failed`.",
+                            "type": "string"
+                        },
+                        "description": "Opaque cursor from a previous page's `next_cursor` — omit for the first page. Reusing a cursor with DIFFERENT query parameters (e.g. a different `limit`) answers 400 `validation_failed`."
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "description": "Only occurrences currently in this state.",
+                            "$ref": "#/components/schemas/TaskOccurrenceStatus"
+                        },
+                        "description": "Only occurrences currently in this state."
+                    },
+                    {
+                        "in": "query",
+                        "name": "starting_on",
+                        "schema": {
+                            "description": "Only occurrences on or after this calendar day (YYYY-MM-DD).",
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                            "example": "2026-08-06"
+                        },
+                        "description": "Only occurrences on or after this calendar day (YYYY-MM-DD)."
+                    },
+                    {
+                        "in": "query",
+                        "name": "ending_on",
+                        "schema": {
+                            "description": "Only occurrences on or before this calendar day (YYYY-MM-DD).",
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                            "example": "2026-08-06"
+                        },
+                        "description": "Only occurrences on or before this calendar day (YYYY-MM-DD)."
+                    },
+                    {
+                        "in": "path",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(?:T-)?[0-9]{1,12}$",
+                            "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
+                            "example": "T-123"
+                        },
+                        "required": true,
+                        "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Page of occurrences.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskOccurrenceList"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/tasks/{task_id}/occurrences/{occurrence_date}": {
+            "patch": {
+                "operationId": "setTaskOccurrenceStatus",
+                "summary": "Complete or skip one day",
+                "description": "Marks ONE day of a repeating task completed or skipped — the SAME shared operation the MCP `complete_task_occurrence` tool executes. The day may be in the PAST (\"I brushed my teeth yesterday\") or a scheduled FUTURE day finished early; neither breaks the chain, and neither touches any other day or the task's own `status`. Re-sending the state a day is already in is a no-op success, so retries are safe. A day the schedule does not produce (or a task that does not repeat) answers 404 `resource_not_found`.",
+                "tags": [
+                    "Task occurrences"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:write"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(?:T-)?[0-9]{1,12}$",
+                            "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
+                            "example": "T-123"
+                        },
+                        "required": true,
+                        "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
+                    },
+                    {
+                        "in": "path",
+                        "name": "occurrence_date",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                            "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.",
+                            "example": "2026-08-06"
+                        },
+                        "required": true,
+                        "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone."
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetTaskOccurrenceStatusBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The updated occurrence.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskOccurrence"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/tasks/{task_id}/dependencies": {
+            "get": {
+                "operationId": "listTaskDependencies",
+                "summary": "Get a task's dependencies",
+                "description": "Both directions of the task's blocker graph one hop out: `blocked_by` (must finish first) and `blocking` (waiting on this task), plus the derived `is_blocked`. A task with no links answers an empty view rather than 404. This is not paginated — the answer is a task's immediate neighbours, not a traversal; walk the chain by following each `task_id`.",
+                "tags": [
+                    "Task dependencies"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:read"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(?:T-)?[0-9]{1,12}$",
+                            "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
+                            "example": "T-123"
+                        },
+                        "required": true,
+                        "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task's dependencies in both directions.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskDependencies"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "operationId": "addTaskDependency",
+                "summary": "Record a blocker",
+                "description": "Records that the task in the path is blocked by `blocker_task_id` — the SAME operation the MCP `link_task_dependency` tool executes. Recording a link that already exists succeeds unchanged (no duplicate row, no second webhook), so retries are safe. A link that would close a loop is REFUSED with 409 `dependency_cycle`: the graph a client reads is guaranteed acyclic. A task cannot block itself (400 `validation_failed`), and a blocker in another organization is indistinguishable from one that does not exist (404 `resource_not_found`). Answers the task's full dependency view, so the caller can see whether it is now blocked without a second call.",
+                "tags": [
+                    "Task dependencies"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:write"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": true,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(?:T-)?[0-9]{1,12}$",
+                            "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
+                            "example": "T-123"
+                        },
+                        "required": true,
+                        "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
+                    },
+                    {
+                        "in": "header",
+                        "name": "Idempotency-Key",
+                        "schema": {
+                            "description": "Optional client-generated key (1-255 visible ASCII characters; a UUID works) making this POST safely retryable. Retrying with the SAME key and byte-identical body within 24h replays the stored first response (marked `Idempotency-Replayed: true`, never re-executed, never charged against quota). The same key with a different body answers 422 `idempotency_key_reused`; a retry racing the first execution answers 409 `idempotency_in_progress`. Omitting the header executes normally with no idempotency guarantee.",
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                        },
+                        "description": "Optional client-generated key (1-255 visible ASCII characters; a UUID works) making this POST safely retryable. Retrying with the SAME key and byte-identical body within 24h replays the stored first response (marked `Idempotency-Replayed: true`, never re-executed, never charged against quota). The same key with a different body answers 422 `idempotency_key_reused`; a retry racing the first execution answers 409 `idempotency_in_progress`. Omitting the header executes normally with no idempotency guarantee."
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddTaskDependencyBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The task's dependencies after the link was recorded.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskDependencies"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "A request with this Idempotency-Key is still executing — `idempotency_in_progress`. `dependency_cycle`: Dependency link would create a loop.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Idempotency-Key reused with a different request body — `idempotency_key_reused`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/tasks/{task_id}/dependencies/{blocker_task_id}": {
+            "delete": {
+                "operationId": "removeTaskDependency",
+                "summary": "Remove a blocker",
+                "description": "Removes the blocked-by link between the two tasks — neither task is otherwise touched, and completion history is untouched. Removing a link that is not there succeeds unchanged, so retries are safe. When this frees the task (its last OPEN blocker is gone), the `task.unblocked` webhook fires — the same event a blocker being completed or archived produces. Answers the task's full dependency view after the removal.",
+                "tags": [
+                    "Task dependencies"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:write"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(?:T-)?[0-9]{1,12}$",
+                            "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
+                            "example": "T-123"
+                        },
+                        "required": true,
+                        "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
+                    },
+                    {
+                        "in": "path",
+                        "name": "blocker_task_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(?:T-)?[0-9]{1,12}$",
+                            "description": "The blocker to unlink from the task in the path.",
+                            "example": "T-123"
+                        },
+                        "required": true,
+                        "description": "The blocker to unlink from the task in the path."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task's dependencies after the link was removed.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskDependencies"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "`validation_failed`: Request validation failed.",
                         "headers": {
                             "x-request-id": {
                                 "required": true,
@@ -8475,6 +9709,12 @@
                     "priority": {
                         "$ref": "#/components/schemas/TaskPriority"
                     },
+                    "start_date": {
+                        "description": "Start date (defer-until) as YYYY-MM-DD (interpreted as UTC).",
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
                     "due_date": {
                         "description": "Due date as YYYY-MM-DD (interpreted as UTC).",
                         "type": "string",
@@ -8530,6 +9770,12 @@
                     "priority": {
                         "$ref": "#/components/schemas/TaskPriority"
                     },
+                    "start_date": {
+                        "description": "New start date (defer-until) as YYYY-MM-DD (interpreted as UTC). Cannot be cleared — the shared update operation treats absence as \"keep\".",
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
                     "due_date": {
                         "description": "New due date as YYYY-MM-DD (interpreted as UTC). Cannot be cleared — the shared update operation treats absence as \"keep\".",
                         "type": "string",
@@ -8547,6 +9793,48 @@
                     }
                 },
                 "description": "Partial update — omitted fields keep their current value. Exactly the field set the external MCP `update_task` tool supports; `description`, project links and the parent are not updatable here (the shared update operation carries them over unchanged)."
+            },
+            "TaskOccurrenceStatus": {
+                "type": "string",
+                "enum": [
+                    "PENDING",
+                    "COMPLETED",
+                    "SKIPPED",
+                    "MISSED"
+                ],
+                "description": "Per-day state of one occurrence of a repeating task. `PENDING` is written by materialization and `MISSED` by the rollover sweep — only `COMPLETED` and `SKIPPED` are user-written."
+            },
+            "SetTaskOccurrenceStatusBody": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "COMPLETED",
+                            "SKIPPED"
+                        ],
+                        "description": "`COMPLETED` = the work for that day is done (records the completion instant and actor). `SKIPPED` = it will not be done and the day is closed rather than rolled over."
+                    }
+                },
+                "required": [
+                    "status"
+                ],
+                "description": "The new state for this one day of the series."
+            },
+            "AddTaskDependencyBody": {
+                "type": "object",
+                "properties": {
+                    "blocker_task_id": {
+                        "type": "string",
+                        "pattern": "^(?:T-)?[0-9]{1,12}$",
+                        "description": "The task that must finish FIRST. It must be in the same organization as the task in the path.",
+                        "example": "T-123"
+                    }
+                },
+                "required": [
+                    "blocker_task_id"
+                ],
+                "description": "The blocker to record for the task in the path."
             },
             "SetDailyPlanStatusBody": {
                 "type": "object",
@@ -8736,7 +10024,7 @@
                         }
                     },
                     "enabled": {
-                        "description": "Enable or disable delivery. Re-enabling (false → true) clears any prior auto-disable reason and resets the consecutive-failure counter.",
+                        "description": "Enable or disable delivery. Disabling holds every delivery already queued for the endpoint (they are not sent while it is disabled). Re-enabling (false → true) clears any prior auto-disable reason and resets the consecutive-failure counter; deliveries held while it was off then resume.",
                         "type": "boolean"
                     }
                 },
@@ -8769,7 +10057,7 @@
                     "since": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Only FAILED/DISABLED deliveries created at or after this ISO-8601 instant are replayed.",
                         "example": "2026-07-24T00:00:00Z"
                     }
@@ -8794,15 +10082,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -8832,20 +10116,16 @@
                         "example": "acme-inc"
                     },
                     "image_url": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Logo URL, or null when none is set."
+                        "description": "Logo URL, or null when none is set.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Creation time, ISO-8601 UTC.",
                         "example": "2026-01-15T09:30:00.000Z"
                     }
@@ -8900,6 +10180,7 @@
                             "idempotency_in_progress",
                             "webhook_url_rejected",
                             "delivery_already_pending",
+                            "dependency_cycle",
                             "internal_error"
                         ],
                         "description": "Stable machine-readable problem code — the value SDKs branch on."
@@ -8968,14 +10249,14 @@
                     "period_start": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Start of the current billing period, ISO-8601 UTC. Paid plans anchor at their subscription renewal; free plans at the first of the calendar month.",
                         "example": "2026-07-01T00:00:00.000Z"
                     },
                     "period_end": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "End of the current billing period, ISO-8601 UTC — when period meters reset.",
                         "example": "2026-08-01T00:00:00.000Z"
                     },
@@ -9071,15 +10352,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -9108,7 +10385,7 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "When this membership was created, ISO-8601 UTC."
                     }
                 },
@@ -9133,15 +10410,11 @@
                         "description": "The member's email address."
                     },
                     "name": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Display name, or null when never set."
+                        "description": "Display name, or null when never set.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -9167,15 +10440,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -9199,26 +10468,22 @@
                         "example": "Website redesign"
                     },
                     "description": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Free-text description, or null when unset."
+                        "description": "Free-text description, or null when unset.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Creation time, ISO-8601 UTC."
                     },
                     "updated_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Last-modified time, ISO-8601 UTC."
                     }
                 },
@@ -9247,15 +10512,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -9274,26 +10535,18 @@
                         "description": "Stable id of the key row."
                     },
                     "name": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Caller-given label."
+                        "description": "Caller-given label.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "key_prefix": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Non-secret fingerprint prefix shown in key lists (e.g. `gid_ab12`); never the full secret."
+                        "description": "Non-secret fingerprint prefix shown in key lists (e.g. `gid_ab12`); never the full secret.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "scopes": {
                         "type": "array",
@@ -9319,7 +10572,7 @@
                             {
                                 "type": "string",
                                 "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             {
                                 "type": "null"
@@ -9332,7 +10585,7 @@
                             {
                                 "type": "string",
                                 "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             {
                                 "type": "null"
@@ -9343,7 +10596,7 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     },
                     "legacy": {
@@ -9372,26 +10625,18 @@
                         "description": "Stable id of the key row."
                     },
                     "name": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Caller-given label."
+                        "description": "Caller-given label.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "key_prefix": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Non-secret fingerprint prefix shown in key lists (e.g. `gid_ab12`); never the full secret."
+                        "description": "Non-secret fingerprint prefix shown in key lists (e.g. `gid_ab12`); never the full secret.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "scopes": {
                         "type": "array",
@@ -9417,7 +10662,7 @@
                             {
                                 "type": "string",
                                 "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             {
                                 "type": "null"
@@ -9430,7 +10675,7 @@
                             {
                                 "type": "string",
                                 "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             {
                                 "type": "null"
@@ -9441,7 +10686,7 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     },
                     "legacy": {
@@ -9502,15 +10747,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -9534,15 +10775,11 @@
                         "example": "Ship the public API"
                     },
                     "description": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Free-text description, or null when unset."
+                        "description": "Free-text description, or null when unset.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "status": {
                         "$ref": "#/components/schemas/TaskStatus"
@@ -9557,12 +10794,25 @@
                             }
                         ]
                     },
+                    "start_date": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Start date (defer-until), ISO-8601 UTC, or null. The task is not meant to be worked on before this day."
+                    },
                     "due_date": {
                         "anyOf": [
                             {
                                 "type": "string",
                                 "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             {
                                 "type": "null"
@@ -9571,24 +10821,16 @@
                         "description": "Due date, ISO-8601 UTC, or null."
                     },
                     "notes": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Rich-text notes of the current version, or null."
+                        "description": "Rich-text notes of the current version, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "story_points": {
-                        "anyOf": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "null"
-                            }
+                        "type": [
+                            "number",
+                            "null"
                         ]
                     },
                     "project_ids": {
@@ -9599,30 +10841,37 @@
                         "description": "Ids of the projects the CURRENT version is linked to (a task can belong to several)."
                     },
                     "parent_task_id": {
+                        "description": "The parent task's short id when this is a subtask, else null.",
+                        "example": "T-99",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "archived": {
+                        "type": "boolean"
+                    },
+                    "recurrence": {
                         "anyOf": [
                             {
-                                "type": "string"
+                                "$ref": "#/components/schemas/TaskRecurrence"
                             },
                             {
                                 "type": "null"
                             }
                         ],
-                        "description": "The parent task's short id when this is a subtask, else null.",
-                        "example": "T-99"
-                    },
-                    "archived": {
-                        "type": "boolean"
+                        "description": "The repeat schedule when this task recurs, else null. Per-day completion lives in the occurrence ledger (`/v1/tasks/{task_id}/occurrences`), never in `status` — completing Monday leaves Tuesday untouched."
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Task creation time (first version), ISO-8601 UTC."
                     },
                     "updated_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Last content change (current version), ISO-8601 UTC."
                     }
                 },
@@ -9632,17 +10881,143 @@
                     "description",
                     "status",
                     "priority",
+                    "start_date",
                     "due_date",
                     "notes",
                     "story_points",
                     "project_ids",
                     "parent_task_id",
                     "archived",
+                    "recurrence",
                     "created_at",
                     "updated_at"
                 ],
                 "additionalProperties": false,
                 "description": "A task, projected from its stable identity plus its CURRENT version."
+            },
+            "TaskRecurrence": {
+                "type": "object",
+                "properties": {
+                    "frequency": {
+                        "$ref": "#/components/schemas/RecurrenceFrequency"
+                    },
+                    "interval": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Repeat every N units of `frequency` — 2 with WEEKLY is \"every other week\".",
+                        "example": 1
+                    },
+                    "by_weekday": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                        },
+                        "description": "WEEKLY only: the weekdays it falls on, 0 = Sunday through 6 = Saturday (`[1,2,3,4,5]` is \"every weekday\"). Empty for DAILY and MONTHLY."
+                    },
+                    "by_month_day": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "MONTHLY only: day of the month, 1-31, clamped to the last day of shorter months (31 lands on Feb 28, or Feb 29 in a leap year). Null otherwise."
+                    },
+                    "basis": {
+                        "$ref": "#/components/schemas/RecurrenceBasis"
+                    },
+                    "timezone": {
+                        "type": "string",
+                        "description": "IANA timezone whose CALENDAR DAYS the occurrences fall on.",
+                        "example": "America/Toronto"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                        "description": "First day the task may recur (RRULE DTSTART). No occurrence is ever created before it.",
+                        "example": "2026-08-06"
+                    },
+                    "end_date": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                                "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.",
+                                "example": "2026-08-06"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Last day the task may recur (RRULE UNTIL), or null for a schedule with no end date."
+                    },
+                    "max_occurrences": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Total number of occurrences the schedule stops after (RRULE COUNT), or null."
+                    },
+                    "rollover_enabled": {
+                        "type": "boolean",
+                        "description": "When true, an unfinished occurrence keeps surfacing on later days instead of silently vanishing."
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "description": "False once the schedule was stopped (cleared, series completed, or task archived). Past occurrences are KEPT either way — completion history is never rewritten."
+                    },
+                    "rrule": {
+                        "type": "string",
+                        "description": "RFC 5545 projection of the fields above, derived on read — never stored, never accepted on input.",
+                        "example": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                    }
+                },
+                "required": [
+                    "frequency",
+                    "interval",
+                    "by_weekday",
+                    "by_month_day",
+                    "basis",
+                    "timezone",
+                    "start_date",
+                    "end_date",
+                    "max_occurrences",
+                    "rollover_enabled",
+                    "active",
+                    "rrule"
+                ],
+                "additionalProperties": false,
+                "description": "A task's repeat schedule. Each day is completed independently through the task-occurrence operations."
+            },
+            "RecurrenceFrequency": {
+                "type": "string",
+                "enum": [
+                    "DAILY",
+                    "WEEKLY",
+                    "MONTHLY"
+                ],
+                "description": "How often a repeating task recurs — the RRULE `FREQ` this rule projects to."
+            },
+            "RecurrenceBasis": {
+                "type": "string",
+                "enum": [
+                    "SCHEDULE",
+                    "AFTER_COMPLETION"
+                ],
+                "description": "Whether the next day is measured from the calendar (`SCHEDULE`) or from the day the previous occurrence was completed (`AFTER_COMPLETION`)."
             },
             "TaskHistoryList": {
                 "type": "object",
@@ -9659,15 +11034,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -9689,13 +11060,9 @@
                         "type": "string"
                     },
                     "description": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
+                        "type": [
+                            "string",
+                            "null"
                         ]
                     },
                     "status": {
@@ -9711,12 +11078,24 @@
                             }
                         ]
                     },
+                    "start_date": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "due_date": {
                         "anyOf": [
                             {
                                 "type": "string",
                                 "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             {
                                 "type": "null"
@@ -9724,29 +11103,21 @@
                         ]
                     },
                     "notes": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
+                        "type": [
+                            "string",
+                            "null"
                         ]
                     },
                     "story_points": {
-                        "anyOf": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "null"
-                            }
+                        "type": [
+                            "number",
+                            "null"
                         ]
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "When this version was written, ISO-8601 UTC."
                     }
                 },
@@ -9756,6 +11127,7 @@
                     "description",
                     "status",
                     "priority",
+                    "start_date",
                     "due_date",
                     "notes",
                     "story_points",
@@ -9763,6 +11135,168 @@
                 ],
                 "additionalProperties": false,
                 "description": "One immutable content snapshot from a task's version history — the ONE place versions surface on this API."
+            },
+            "TaskOccurrenceList": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TaskOccurrence"
+                        },
+                        "description": "The current page of results."
+                    },
+                    "has_more": {
+                        "type": "boolean",
+                        "description": "True when another page exists after this one."
+                    },
+                    "next_cursor": {
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "data",
+                    "has_more",
+                    "next_cursor"
+                ],
+                "additionalProperties": false,
+                "description": "Cursor-envelope page of occurrences, most recent day first. A task that does not repeat answers an empty page."
+            },
+            "TaskOccurrence": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "The repeating task's short id.",
+                        "example": "T-123"
+                    },
+                    "occurrence_date": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                        "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.",
+                        "example": "2026-08-06"
+                    },
+                    "sequence": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "1-based ordinal of this day within the series — what an RRULE COUNT limit and streak math count.",
+                        "example": 12
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/TaskOccurrenceStatus"
+                    },
+                    "completed_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "The INSTANT the user completed this day, ISO-8601 UTC, or null. Deliberately distinct from `occurrence_date`: completing Tuesday on Monday records both truths."
+                    }
+                },
+                "required": [
+                    "task_id",
+                    "occurrence_date",
+                    "sequence",
+                    "status",
+                    "completed_at"
+                ],
+                "additionalProperties": false,
+                "description": "One DAY of a repeating task, with its own completion state."
+            },
+            "TaskDependencies": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "pattern": "^(?:T-)?[0-9]{1,12}$",
+                        "description": "The task this view is for.",
+                        "example": "T-123"
+                    },
+                    "is_blocked": {
+                        "type": "boolean",
+                        "description": "DERIVED on every read: true when at least one entry in `blocked_by` is still `open`. Never a stored column and never written to the task's `status` — a blocked task keeps whatever status its owner set."
+                    },
+                    "blocked_by_count": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "How many tasks must finish first, open or not — `blocked_by.length`.",
+                        "example": 2
+                    },
+                    "blocking_count": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "How many tasks wait on this one — `blocking.length`.",
+                        "example": 1
+                    },
+                    "blocked_by": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TaskDependencyRef"
+                        },
+                        "description": "Tasks that must finish before this one can be worked on, oldest link first."
+                    },
+                    "blocking": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TaskDependencyRef"
+                        },
+                        "description": "Tasks waiting on this one, oldest link first — the other direction of the same edges."
+                    }
+                },
+                "required": [
+                    "task_id",
+                    "is_blocked",
+                    "blocked_by_count",
+                    "blocking_count",
+                    "blocked_by",
+                    "blocking"
+                ],
+                "additionalProperties": false,
+                "description": "Both directions of a task's blocker graph, one hop out, plus its derived blocked state."
+            },
+            "TaskDependencyRef": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "pattern": "^(?:T-)?[0-9]{1,12}$",
+                        "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
+                        "example": "T-123"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "The other task's title (its current version).",
+                        "example": "Ship the public API"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/TaskStatus"
+                    },
+                    "open": {
+                        "type": "boolean",
+                        "description": "Whether this task is still outstanding — not COMPLETED and not archived. Only OPEN blockers hold work back, so this is the flag `is_blocked` aggregates."
+                    }
+                },
+                "required": [
+                    "task_id",
+                    "title",
+                    "status",
+                    "open"
+                ],
+                "additionalProperties": false,
+                "description": "A task on the other end of a dependency link."
             },
             "DailyPlan": {
                 "type": "object",
@@ -9839,7 +11373,7 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "When the task was placed on this section, ISO-8601 UTC. Entries within a section are ordered by this (oldest first) — there is no free positional reorder."
                     }
                 },
@@ -9910,15 +11444,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -9953,7 +11483,7 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                 },
                 "required": [
@@ -9984,7 +11514,7 @@
                     "expires_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "When the upload URL stops working, ISO-8601 UTC."
                     }
                 },
@@ -10007,7 +11537,7 @@
                     "expires_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "When the URL stops working, ISO-8601 UTC."
                     }
                 },
@@ -10033,15 +11563,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -10065,7 +11591,7 @@
                     },
                     "enabled": {
                         "type": "boolean",
-                        "description": "False when disabled — manually, or auto-disabled after repeated delivery failures (see `disabled_reason`)."
+                        "description": "False when disabled — manually, auto-disabled after repeated delivery failures, or paused when the account that set it up had its email address verified (see `disabled_reason`). A disabled endpoint receives nothing: deliveries already queued for it are held, not sent, and go out only if it is re-enabled."
                     },
                     "event_types": {
                         "type": "array",
@@ -10079,26 +11605,22 @@
                         "description": "True once the `verify` action has proven this endpoint accepts a correctly-signed request."
                     },
                     "disabled_reason": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Why the endpoint was auto-disabled, or null when never auto-disabled."
+                        "description": "Why the endpoint was auto-disabled or paused by an account take-back, or null when it never was.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     },
                     "updated_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     }
                 },
@@ -10128,7 +11650,7 @@
                     },
                     "enabled": {
                         "type": "boolean",
-                        "description": "False when disabled — manually, or auto-disabled after repeated delivery failures (see `disabled_reason`)."
+                        "description": "False when disabled — manually, auto-disabled after repeated delivery failures, or paused when the account that set it up had its email address verified (see `disabled_reason`). A disabled endpoint receives nothing: deliveries already queued for it are held, not sent, and go out only if it is re-enabled."
                     },
                     "event_types": {
                         "type": "array",
@@ -10142,26 +11664,22 @@
                         "description": "True once the `verify` action has proven this endpoint accepts a correctly-signed request."
                     },
                     "disabled_reason": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Why the endpoint was auto-disabled, or null when never auto-disabled."
+                        "description": "Why the endpoint was auto-disabled or paused by an account take-back, or null when it never was.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     },
                     "updated_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     },
                     "secret": {
@@ -10211,7 +11729,7 @@
                     },
                     "enabled": {
                         "type": "boolean",
-                        "description": "False when disabled — manually, or auto-disabled after repeated delivery failures (see `disabled_reason`)."
+                        "description": "False when disabled — manually, auto-disabled after repeated delivery failures, or paused when the account that set it up had its email address verified (see `disabled_reason`). A disabled endpoint receives nothing: deliveries already queued for it are held, not sent, and go out only if it is re-enabled."
                     },
                     "event_types": {
                         "type": "array",
@@ -10225,26 +11743,22 @@
                         "description": "True once the `verify` action has proven this endpoint accepts a correctly-signed request."
                     },
                     "disabled_reason": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Why the endpoint was auto-disabled, or null when never auto-disabled."
+                        "description": "Why the endpoint was auto-disabled or paused by an account take-back, or null when it never was.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     },
                     "updated_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     },
                     "secret": {
@@ -10255,7 +11769,7 @@
                     "previous_secret_expires_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "The prior secret keeps signing outgoing deliveries alongside the new one until this time (~24h out) — dual-secret acceptance so you can finish updating your verifier before the old secret dies."
                     }
                 },
@@ -10350,15 +11864,11 @@
                         "description": "True when another page exists after this one."
                     },
                     "next_cursor": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page."
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -10411,7 +11921,7 @@
                             {
                                 "type": "string",
                                 "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             {
                                 "type": "null"
@@ -10422,7 +11932,7 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
-                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "ISO-8601 UTC."
                     }
                 },

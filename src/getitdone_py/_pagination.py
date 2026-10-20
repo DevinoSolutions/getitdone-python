@@ -1,4 +1,4 @@
-"""Cursor pagination for the 9 paginated ``/v1`` list operations.
+"""Cursor pagination for the 10 paginated ``/v1`` list operations.
 
 Every list responds with ``{data, has_more, next_cursor}``; the next page is the
 SAME query plus ``after=next_cursor``. The server REJECTS a cursor reused with

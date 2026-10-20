@@ -1,0 +1,15 @@
+{
+  "task_id": "T-123",
+  "is_blocked": true,
+  "blocked_by_count": 1,
+  "blocking_count": 0,
+  "blocked_by": [
+    {
+      "task_id": "T-99",
+      "title": "Ship the public API",
+      "status": "TODO",
+      "open": true
+    }
+  ],
+  "blocking": []
+}
