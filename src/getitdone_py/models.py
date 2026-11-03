@@ -22,6 +22,7 @@ class CreateProjectBody(BaseModel):
         ...,
         description='Display name, 1-200 characters after trimming.',
         examples=['Website redesign'],
+        json_schema_extra={'example': 'Website redesign'},
         max_length=200,
         min_length=1,
     )
@@ -42,6 +43,7 @@ class CreateApiKeyBody(BaseModel):
         ...,
         description='Caller-given label for the key.',
         examples=['CI deploy bot'],
+        json_schema_extra={'example': 'CI deploy bot'},
         max_length=200,
         min_length=1,
     )
@@ -58,6 +60,12 @@ class CreateApiKeyBody(BaseModel):
                 'api-keys:manage',
                 'webhooks:read',
                 'webhooks:write',
+                'destructive:run',
+                'billing:manage',
+                'account:manage',
+                'team:manage',
+                'connections:manage',
+                'support:write',
             ]
         ]
         | None
@@ -121,6 +129,7 @@ class AddTaskDependencyBody(BaseModel):
         ...,
         description='The task that must finish FIRST. It must be in the same organization as the task in the path.',
         examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
         pattern='^(?:T-)?[0-9]{1,12}$',
     )
 
@@ -138,6 +147,7 @@ class CreateDailyPlanEntryBody(BaseModel):
         ...,
         description='Task short id, e.g. `T-123` (a bare `123` is also accepted on input).',
         examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
         pattern='^(?:T-)?[0-9]{1,12}$',
     )
     section: Literal['TODO', 'PROGRESS'] = Field(
@@ -181,14 +191,106 @@ class CreateAttachmentUploadBody(BaseModel):
     """
 
     file_name: str = Field(
-        ..., examples=['screenshot.png'], max_length=255, min_length=1
+        ...,
+        examples=['screenshot.png'],
+        json_schema_extra={'example': 'screenshot.png'},
+        max_length=255,
+        min_length=1,
     )
-    content_type: str = Field(..., examples=['image/png'], max_length=255, min_length=1)
+    content_type: str = Field(
+        ...,
+        examples=['image/png'],
+        json_schema_extra={'example': 'image/png'},
+        max_length=255,
+        min_length=1,
+    )
     size: int = Field(
         ...,
         description="File size in bytes — checked against the organization's plan file-size and storage allowances.",
         ge=1,
         le=9007199254740991,
+    )
+
+
+class CreateNoteBody(BaseModel):
+    """
+    Fields for creating a workspace note.
+    """
+
+    title: str = Field(
+        ...,
+        description='Note title (1-200 characters after trimming).',
+        examples=['Deployment runbook'],
+        json_schema_extra={'example': 'Deployment runbook'},
+        max_length=200,
+        min_length=1,
+    )
+    body: str | None = Field(
+        '',
+        description='Note body, plain text or Markdown (max 100000 characters). Defaults to empty.',
+        max_length=100000,
+    )
+    project_id: str | None = Field(
+        None,
+        description='Optional project to attach the note to. Must be a project in the same organization.',
+    )
+
+
+class UpdateNoteBody(BaseModel):
+    """
+    Fields for updating a note. Requires the base_updated_at compare-and-set value.
+    """
+
+    title: str | None = Field(
+        None,
+        description='New title (1-200 characters after trimming).',
+        max_length=200,
+        min_length=1,
+    )
+    body: str | None = Field(
+        None,
+        description='New body (max 100000 characters). Replaces the entire body.',
+        max_length=100000,
+    )
+    base_updated_at: datetime = Field(
+        ...,
+        description="The `updated_at` value from the last read of this note. The update is refused with 409 `conflict` if the note has been modified since this timestamp — re-read the note and rebase your changes. This prevents agents from silently overwriting each other's edits.",
+    )
+
+
+class AppendNoteBody(BaseModel):
+    """
+    A dated entry to append to a note.
+    """
+
+    text: str = Field(
+        ...,
+        description='The entry to append (1-10000 characters). A date header is prepended automatically.',
+        max_length=10000,
+        min_length=1,
+    )
+    author: str | None = Field(
+        None,
+        description='Author label for the entry. Defaults to the credential label.',
+        max_length=100,
+    )
+
+
+class AppendTaskNoteBody(BaseModel):
+    """
+    A dated entry to append to a task's notes without rewriting them.
+    """
+
+    text: str = Field(
+        ...,
+        description='The entry to append (1-10000 characters). A date header is prepended automatically.',
+        max_length=10000,
+        min_length=1,
+    )
+    author: str | None = Field(
+        None,
+        description='Author label for the entry. Defaults to the credential label.',
+        max_length=100,
     )
 
 
@@ -231,6 +333,7 @@ class ReplayFailedWebhookDeliveriesBody(BaseModel):
         ...,
         description='Only FAILED/DISABLED deliveries created at or after this ISO-8601 instant are replayed.',
         examples=['2026-07-24T00:00:00Z'],
+        json_schema_extra={'example': '2026-07-24T00:00:00Z'},
     )
 
 
@@ -246,9 +349,20 @@ class Organization(BaseModel):
         ...,
         description='Stable opaque organization id.',
         examples=['9f6acab2-8f8e-4c7e-9c3a-2f6d0c9e4b11'],
+        json_schema_extra={'example': '9f6acab2-8f8e-4c7e-9c3a-2f6d0c9e4b11'},
     )
-    name: str = Field(..., description='Display name.', examples=['Acme Inc'])
-    slug: str = Field(..., description='URL-safe unique slug.', examples=['acme-inc'])
+    name: str = Field(
+        ...,
+        description='Display name.',
+        examples=['Acme Inc'],
+        json_schema_extra={'example': 'Acme Inc'},
+    )
+    slug: str = Field(
+        ...,
+        description='URL-safe unique slug.',
+        examples=['acme-inc'],
+        json_schema_extra={'example': 'acme-inc'},
+    )
     image_url: str | None = Field(
         ..., description='Logo URL, or null when none is set.'
     )
@@ -256,6 +370,7 @@ class Organization(BaseModel):
         ...,
         description='Creation time, ISO-8601 UTC.',
         examples=['2026-01-15T09:30:00.000Z'],
+        json_schema_extra={'example': '2026-01-15T09:30:00.000Z'},
     )
 
 
@@ -271,11 +386,13 @@ class FieldError(BaseModel):
         ...,
         description='RFC 6901 JSON Pointer to the offending request field.',
         examples=['/name'],
+        json_schema_extra={'example': '/name'},
     )
     code: str = Field(
         ...,
         description='Machine-readable per-field validation code.',
         examples=['invalid_type'],
+        json_schema_extra={'example': 'invalid_type'},
     )
     message: str = Field(..., description='Human-readable explanation for this field.')
 
@@ -293,6 +410,7 @@ class Burst(BaseModel):
         description='Requests each individual credential may make per minute before 429 rate_limited.',
         examples=[10],
         ge=-9007199254740991,
+        json_schema_extra={'example': 10},
         le=9007199254740991,
     )
 
@@ -306,13 +424,17 @@ class UsageMeter(BaseModel):
         extra='allow',
     )
     meter: Literal['api_calls'] = Field(
-        ..., description='Which allowance this entry reports.', examples=['api_calls']
+        ...,
+        description='Which allowance this entry reports.',
+        examples=['api_calls'],
+        json_schema_extra={'example': 'api_calls'},
     )
     used: int = Field(
         ...,
         description='Units consumed so far in the current period.',
         examples=[27],
         ge=0,
+        json_schema_extra={'example': 27},
         le=9007199254740991,
     )
     limit: int = Field(
@@ -320,6 +442,7 @@ class UsageMeter(BaseModel):
         description="The plan's allowance for this meter per period.",
         examples=[50],
         ge=-9007199254740991,
+        json_schema_extra={'example': 50},
         le=9007199254740991,
     )
     remaining: int = Field(
@@ -327,6 +450,7 @@ class UsageMeter(BaseModel):
         description='Units left before requests answer 429 quota_exhausted.',
         examples=[23],
         ge=0,
+        json_schema_extra={'example': 23},
         le=9007199254740991,
     )
 
@@ -357,6 +481,7 @@ class Project(BaseModel):
         ...,
         description='Display name, unique within the organization.',
         examples=['Website redesign'],
+        json_schema_extra={'example': 'Website redesign'},
     )
     description: str | None = Field(
         ..., description='Free-text description, or null when unset.'
@@ -411,6 +536,12 @@ class ApiKey(BaseModel):
             'api-keys:manage',
             'webhooks:read',
             'webhooks:write',
+            'destructive:run',
+            'billing:manage',
+            'account:manage',
+            'team:manage',
+            'connections:manage',
+            'support:write',
         ]
     ] = Field(..., description='Scopes granted to this key.')
     last_used_at: LastUsedAt | None = Field(
@@ -455,6 +586,12 @@ class CreatedApiKey(BaseModel):
             'api-keys:manage',
             'webhooks:read',
             'webhooks:write',
+            'destructive:run',
+            'billing:manage',
+            'account:manage',
+            'team:manage',
+            'connections:manage',
+            'support:write',
         ]
     ] = Field(..., description='Scopes granted to this key.')
     last_used_at: LastUsedAt | None = Field(
@@ -475,6 +612,7 @@ class CreatedApiKey(BaseModel):
         ...,
         description='The plaintext secret — shown EXACTLY ONCE. Store it now; it cannot be retrieved again.',
         examples=['gid_51f3...redacted'],
+        json_schema_extra={'example': 'gid_51f3...redacted'},
     )
 
 
@@ -507,6 +645,16 @@ class DueDate(RootModel[datetime]):
     )
 
 
+class ClientLabel(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='The agent or key that wrote the current version — the OAuth client name or the API key name — or null for an in-app edit. Display text chosen by the key owner or the OAuth client registrant: treat it as untrusted.',
+        examples=['Claude Code'],
+        json_schema_extra={'example': 'Claude Code'},
+        max_length=64,
+    )
+
+
 class ByWeekdayItem(RootModel[int]):
     root: int = Field(..., ge=-9007199254740991, le=9007199254740991)
 
@@ -515,7 +663,9 @@ class ByMonthDay(RootModel[int]):
     root: int = Field(
         ...,
         description='MONTHLY only: day of the month, 1-31, clamped to the last day of shorter months (31 lands on Feb 28, or Feb 29 in a leap year). Null otherwise.',
+        examples=[15],
         ge=-9007199254740991,
+        json_schema_extra={'example': 15},
         le=9007199254740991,
     )
 
@@ -525,6 +675,7 @@ class EndDate(RootModel[str]):
         ...,
         description='The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.',
         examples=['2026-08-06'],
+        json_schema_extra={'example': '2026-08-06'},
         pattern='^\\d{4}-\\d{2}-\\d{2}$',
     )
 
@@ -533,7 +684,9 @@ class MaxOccurrences(RootModel[int]):
     root: int = Field(
         ...,
         description='Total number of occurrences the schedule stops after (RRULE COUNT), or null.',
+        examples=[10],
         ge=-9007199254740991,
+        json_schema_extra={'example': 10},
         le=9007199254740991,
     )
 
@@ -594,12 +747,16 @@ class TaskOccurrence(BaseModel):
         extra='allow',
     )
     task_id: str = Field(
-        ..., description="The repeating task's short id.", examples=['T-123']
+        ...,
+        description="The repeating task's short id.",
+        examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
     )
     occurrence_date: str = Field(
         ...,
         description='The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.',
         examples=['2026-08-06'],
+        json_schema_extra={'example': '2026-08-06'},
         pattern='^\\d{4}-\\d{2}-\\d{2}$',
     )
     sequence: int = Field(
@@ -607,6 +764,7 @@ class TaskOccurrence(BaseModel):
         description='1-based ordinal of this day within the series — what an RRULE COUNT limit and streak math count.',
         examples=[12],
         ge=-9007199254740991,
+        json_schema_extra={'example': 12},
         le=9007199254740991,
     )
     status: Literal['PENDING', 'COMPLETED', 'SKIPPED', 'MISSED'] = Field(
@@ -631,12 +789,14 @@ class TaskDependencyRef(BaseModel):
         ...,
         description='Task short id, e.g. `T-123` (a bare `123` is also accepted on input).',
         examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
         pattern='^(?:T-)?[0-9]{1,12}$',
     )
     title: str = Field(
         ...,
         description="The other task's title (its current version).",
         examples=['Ship the public API'],
+        json_schema_extra={'example': 'Ship the public API'},
     )
     status: Literal['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'BLOCKED'] = Field(
         ..., description='Task workflow status.'
@@ -664,7 +824,10 @@ class DailyPlanEntry(BaseModel):
         description='Daily-board section: `TODO` = the plan list, `PROGRESS` = the in-progress list.',
     )
     task_id: str = Field(
-        ..., description="The planned task's short id.", examples=['T-123']
+        ...,
+        description="The planned task's short id.",
+        examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
     )
     title: str = Field(..., description="The planned task's current title.")
     status: Literal['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'BLOCKED'] = Field(
@@ -717,12 +880,20 @@ class Attachment(BaseModel):
         extra='allow',
     )
     id: str = Field(..., description='Stable opaque attachment id.')
-    file_name: str = Field(..., examples=['screenshot.png'])
-    content_type: str = Field(..., examples=['image/png'])
+    file_name: str = Field(
+        ...,
+        examples=['screenshot.png'],
+        json_schema_extra={'example': 'screenshot.png'},
+    )
+    content_type: str = Field(
+        ..., examples=['image/png'], json_schema_extra={'example': 'image/png'}
+    )
     size: int = Field(
         ...,
         description='File size in bytes.',
+        examples=[248312],
         ge=-9007199254740991,
+        json_schema_extra={'example': 248312},
         le=9007199254740991,
     )
     created_at: datetime = Field(
@@ -766,6 +937,109 @@ class AttachmentDownloadUrl(BaseModel):
         ...,
         description='When the URL stops working, ISO-8601 UTC.',
     )
+
+
+class NotePreview(BaseModel):
+    """
+    A note as it appears in a list — a truncated preview, never the full body.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    id: str = Field(..., description='Stable opaque note id.')
+    title: str = Field(..., description='Note title.')
+    preview: str = Field(
+        ...,
+        description='Plain-text start of the body, truncated when longer than the preview limit.',
+    )
+    length: int = Field(
+        ...,
+        description='Character count of the full body.',
+        examples=[1840],
+        ge=-9007199254740991,
+        json_schema_extra={'example': 1840},
+        le=9007199254740991,
+    )
+    project_name: str | None = Field(..., description='Project display name, or null.')
+    archived: bool = Field(..., description='True when the note is archived.')
+    updated_at: datetime = Field(
+        ...,
+        description='Last-modified time, ISO-8601 UTC.',
+    )
+    updated_by_name: str | None = Field(
+        ..., description='Display name of the last editor.'
+    )
+
+
+class Note(BaseModel):
+    """
+    A workspace shared note.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    id: str = Field(..., description='Stable opaque note id.')
+    title: str = Field(
+        ...,
+        description='Note title, unique within the organization.',
+        examples=['Deployment runbook'],
+        json_schema_extra={'example': 'Deployment runbook'},
+    )
+    body: str = Field(
+        ...,
+        description='Full note body (plain text or Markdown). Only returned by the get-one endpoint; list returns a preview.',
+    )
+    project_id: str | None = Field(
+        ..., description='Project the note belongs to, or null when workspace-wide.'
+    )
+    project_name: str | None = Field(..., description='Project display name, or null.')
+    archived: bool = Field(..., description='True when the note is archived.')
+    length: int = Field(
+        ...,
+        description='Character count of the full body.',
+        examples=[1840],
+        ge=-9007199254740991,
+        json_schema_extra={'example': 1840},
+        le=9007199254740991,
+    )
+    updated_at: datetime = Field(
+        ...,
+        description='Last-modified time, ISO-8601 UTC.',
+    )
+    updated_by_name: str | None = Field(
+        ...,
+        description='Display name of the last person or agent who wrote to this note.',
+    )
+
+
+class TaskNoteResult(BaseModel):
+    """
+    Result of appending to a task note.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    task_id: str = Field(..., description='Task id.')
+    short_id: int = Field(
+        ...,
+        description='Human-readable short id.',
+        examples=[123],
+        ge=-9007199254740991,
+        json_schema_extra={'example': 123},
+        le=9007199254740991,
+    )
+    notes_length: int = Field(
+        ...,
+        description='Character count of the notes after the append.',
+        examples=[512],
+        ge=-9007199254740991,
+        json_schema_extra={'example': 512},
+        le=9007199254740991,
+    )
+    message: str = Field(..., description='Human-readable confirmation.')
 
 
 class WebhookEndpoint(BaseModel):
@@ -840,6 +1114,7 @@ class CreatedWebhookEndpoint(BaseModel):
         ...,
         description='The signing secret (`whsec_…`) — shown EXACTLY ONCE. Store it now; it cannot be retrieved again, only rotated. Note: replaying this exact request within the 24h Idempotency-Key window returns this SAME secret again — treat a stored Idempotency-Key as equally sensitive to the secret itself.',
         examples=['whsec_51f3...redacted'],
+        json_schema_extra={'example': 'whsec_51f3...redacted'},
     )
 
 
@@ -891,6 +1166,7 @@ class RotatedWebhookEndpointSecret(BaseModel):
         ...,
         description='The NEW signing secret — shown EXACTLY ONCE.',
         examples=['whsec_51f3...redacted'],
+        json_schema_extra={'example': 'whsec_51f3...redacted'},
     )
     previous_secret_expires_at: datetime = Field(
         ...,
@@ -913,7 +1189,9 @@ class WebhookEndpointVerificationResult(BaseModel):
     status: int | None = Field(
         None,
         description='The HTTP status the endpoint returned, when a response was received at all (absent for a blocked/timed-out/network-failed probe).',
+        examples=[200],
         ge=-9007199254740991,
+        json_schema_extra={'example': 200},
         le=9007199254740991,
     )
     reason: str | None = Field(
@@ -925,7 +1203,9 @@ class LastStatus(RootModel[int]):
     root: int = Field(
         ...,
         description='HTTP status of the most recent attempt, or null before any attempt has run.',
+        examples=[200],
         ge=-9007199254740991,
+        json_schema_extra={'example': 200},
         le=9007199254740991,
     )
 
@@ -957,12 +1237,16 @@ class WebhookDelivery(BaseModel):
     attempt_count: int = Field(
         ...,
         description='Number of delivery attempts made so far.',
+        examples=[1],
         ge=-9007199254740991,
+        json_schema_extra={'example': 1},
         le=9007199254740991,
     )
     last_status: LastStatus | None = Field(
         ...,
         description='HTTP status of the most recent attempt, or null before any attempt has run.',
+        examples=[200],
+        json_schema_extra={'example': 200},
     )
     next_attempt_at: NextAttemptAt | None = Field(
         ..., description='When the next retry is scheduled, or null when not PENDING.'
@@ -984,7 +1268,9 @@ class ReplayedWebhookDeliveries(BaseModel):
     replayed_count: int = Field(
         ...,
         description='How many FRESH PENDING deliveries this call created (capped at 1000 per call).',
+        examples=[3],
         ge=-9007199254740991,
+        json_schema_extra={'example': 3},
         le=9007199254740991,
     )
 
@@ -998,6 +1284,7 @@ class CreateTaskBody(BaseModel):
         ...,
         description='Task title, 1-500 characters after trimming.',
         examples=['Ship the public API'],
+        json_schema_extra={'example': 'Ship the public API'},
         max_length=500,
         min_length=1,
     )
@@ -1026,6 +1313,7 @@ class CreateTaskBody(BaseModel):
         None,
         description="Create as a subtask of this task (short id, must belong to the credential's organization).",
         examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
         pattern='^(?:T-)?[0-9]{1,12}$',
     )
 
@@ -1053,6 +1341,7 @@ class CreateWebhookEndpointBody(BaseModel):
         ...,
         description='The https destination URL. Must be https, port 443 (explicit or default), and carry no `user:pass@` credentials — a URL failing this check answers 422 `webhook_url_rejected` with the specific reason and creates NO row.',
         examples=['https://example.com/webhooks/getitdone'],
+        json_schema_extra={'example': 'https://example.com/webhooks/getitdone'},
         max_length=2048,
         min_length=1,
     )
@@ -1095,6 +1384,9 @@ class Problem(BaseModel):
         ...,
         description='URI identifying the problem class; resolves to its docs page.',
         examples=['https://nowgetitdone.com/docs/api/problems/validation-failed'],
+        json_schema_extra={
+            'example': 'https://nowgetitdone.com/docs/api/problems/validation-failed'
+        },
     )
     title: str = Field(
         ...,
@@ -1105,6 +1397,7 @@ class Problem(BaseModel):
         description='HTTP status code, duplicated from the response.',
         examples=[400],
         ge=-9007199254740991,
+        json_schema_extra={'example': 400},
         le=9007199254740991,
     )
     detail: str | None = Field(
@@ -1125,6 +1418,7 @@ class Problem(BaseModel):
         'idempotency_in_progress',
         'webhook_url_rejected',
         'delivery_already_pending',
+        'conflict',
         'dependency_cycle',
         'internal_error',
     ] = Field(
@@ -1149,17 +1443,22 @@ class Usage(BaseModel):
         extra='allow',
     )
     plan: Literal['FREE', 'PRO', 'TEAM'] = Field(
-        ..., description="The organization's current plan tier.", examples=['FREE']
+        ...,
+        description="The organization's current plan tier.",
+        examples=['FREE'],
+        json_schema_extra={'example': 'FREE'},
     )
     period_start: datetime = Field(
         ...,
         description='Start of the current billing period, ISO-8601 UTC. Paid plans anchor at their subscription renewal; free plans at the first of the calendar month.',
         examples=['2026-07-01T00:00:00.000Z'],
+        json_schema_extra={'example': '2026-07-01T00:00:00.000Z'},
     )
     period_end: datetime = Field(
         ...,
         description='End of the current billing period, ISO-8601 UTC — when period meters reset.',
         examples=['2026-08-01T00:00:00.000Z'],
+        json_schema_extra={'example': '2026-08-01T00:00:00.000Z'},
     )
     meters: list[UsageMeter] = Field(
         ..., description='Per-meter consumption for the current period.'
@@ -1181,7 +1480,10 @@ class Member(BaseModel):
     id: str = Field(..., description='Stable id of the membership row itself.')
     user: MemberUser
     role: str = Field(
-        ..., description="The member's role in the organization.", examples=['owner']
+        ...,
+        description="The member's role in the organization.",
+        examples=['owner'],
+        json_schema_extra={'example': 'owner'},
     )
     created_at: datetime = Field(
         ...,
@@ -1242,15 +1544,20 @@ class TaskRecurrence(BaseModel):
         description='Repeat every N units of `frequency` — 2 with WEEKLY is "every other week".',
         examples=[1],
         ge=-9007199254740991,
+        json_schema_extra={'example': 1},
         le=9007199254740991,
     )
     by_weekday: list[ByWeekdayItem] = Field(
         ...,
         description='WEEKLY only: the weekdays it falls on, 0 = Sunday through 6 = Saturday (`[1,2,3,4,5]` is "every weekday"). Empty for DAILY and MONTHLY.',
+        examples=[[1, 2, 3, 4, 5]],
+        json_schema_extra={'example': [1, 2, 3, 4, 5]},
     )
     by_month_day: ByMonthDay | None = Field(
         ...,
         description='MONTHLY only: day of the month, 1-31, clamped to the last day of shorter months (31 lands on Feb 28, or Feb 29 in a leap year). Null otherwise.',
+        examples=[15],
+        json_schema_extra={'example': 15},
     )
     basis: Literal['SCHEDULE', 'AFTER_COMPLETION'] = Field(
         ...,
@@ -1260,11 +1567,13 @@ class TaskRecurrence(BaseModel):
         ...,
         description='IANA timezone whose CALENDAR DAYS the occurrences fall on.',
         examples=['America/Toronto'],
+        json_schema_extra={'example': 'America/Toronto'},
     )
     start_date: str = Field(
         ...,
         description='First day the task may recur (RRULE DTSTART). No occurrence is ever created before it.',
         examples=['2026-08-06'],
+        json_schema_extra={'example': '2026-08-06'},
         pattern='^\\d{4}-\\d{2}-\\d{2}$',
     )
     end_date: EndDate | None = Field(
@@ -1274,6 +1583,8 @@ class TaskRecurrence(BaseModel):
     max_occurrences: MaxOccurrences | None = Field(
         ...,
         description='Total number of occurrences the schedule stops after (RRULE COUNT), or null.',
+        examples=[10],
+        json_schema_extra={'example': 10},
     )
     rollover_enabled: bool = Field(
         ...,
@@ -1287,6 +1598,7 @@ class TaskRecurrence(BaseModel):
         ...,
         description='RFC 5545 projection of the fields above, derived on read — never stored, never accepted on input.',
         examples=['FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'],
+        json_schema_extra={'example': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'},
     )
 
 
@@ -1340,6 +1652,7 @@ class TaskDependencies(BaseModel):
         ...,
         description='The task this view is for.',
         examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
         pattern='^(?:T-)?[0-9]{1,12}$',
     )
     is_blocked: bool = Field(
@@ -1351,6 +1664,7 @@ class TaskDependencies(BaseModel):
         description='How many tasks must finish first, open or not — `blocked_by.length`.',
         examples=[2],
         ge=-9007199254740991,
+        json_schema_extra={'example': 2},
         le=9007199254740991,
     )
     blocking_count: int = Field(
@@ -1358,6 +1672,7 @@ class TaskDependencies(BaseModel):
         description='How many tasks wait on this one — `blocking.length`.',
         examples=[1],
         ge=-9007199254740991,
+        json_schema_extra={'example': 1},
         le=9007199254740991,
     )
     blocked_by: list[TaskDependencyRef] = Field(
@@ -1408,6 +1723,24 @@ class AttachmentList(BaseModel):
     )
 
 
+class NoteList(BaseModel):
+    """
+    Cursor-envelope page of an organization's shared notes.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+    )
+    data: list[NotePreview] = Field(..., description='The current page of results.')
+    has_more: bool = Field(
+        ..., description='True when another page exists after this one.'
+    )
+    next_cursor: str | None = Field(
+        ...,
+        description='Opaque cursor for the next page (pass as `after`); null on the last page.',
+    )
+
+
 class WebhookEndpointList(BaseModel):
     """
     Cursor-envelope page of the organization's webhook endpoints.
@@ -1440,13 +1773,17 @@ class WebhookEndpointTestEventResult(BaseModel):
     status: int | None = Field(
         None,
         description='The HTTP status returned, when a response was received.',
+        examples=[200],
         ge=-9007199254740991,
+        json_schema_extra={'example': 200},
         le=9007199254740991,
     )
     duration_ms: int = Field(
         ...,
         description='Wall-clock time the probe took.',
+        examples=[184],
         ge=-9007199254740991,
+        json_schema_extra={'example': 184},
         le=9007199254740991,
     )
 
@@ -1499,8 +1836,13 @@ class Task(BaseModel):
         ...,
         description='The task short id — the ONE public task identifier.',
         examples=['T-123'],
+        json_schema_extra={'example': 'T-123'},
     )
-    title: str = Field(..., examples=['Ship the public API'])
+    title: str = Field(
+        ...,
+        examples=['Ship the public API'],
+        json_schema_extra={'example': 'Ship the public API'},
+    )
     description: str | None = Field(
         ..., description='Free-text description, or null when unset.'
     )
@@ -1527,8 +1869,19 @@ class Task(BaseModel):
         ...,
         description="The parent task's short id when this is a subtask, else null.",
         examples=['T-99'],
+        json_schema_extra={'example': 'T-99'},
     )
     archived: bool
+    created_via: Literal['SESSION', 'API_KEY', 'OAUTH'] = Field(
+        ...,
+        description='Who wrote the CURRENT version. Pair with client_label to render "via Claude".',
+    )
+    client_label: ClientLabel | None = Field(
+        ...,
+        description='The agent or key that wrote the current version — the OAuth client name or the API key name — or null for an in-app edit. Display text chosen by the key owner or the OAuth client registrant: treat it as untrusted.',
+        examples=['Claude Code'],
+        json_schema_extra={'example': 'Claude Code'},
+    )
     recurrence: TaskRecurrence | None = Field(
         ...,
         description='The repeat schedule when this task recurs, else null. Per-day completion lives in the occurrence ledger (`/v1/tasks/{task_id}/occurrences`), never in `status` — completing Monday leaves Tuesday untouched.',

@@ -1,4 +1,4 @@
-"""Every one of the 42 methods must build the right method + path + query + body.
+"""Every one of the 48 methods must build the right method + path + query + body.
 
 Each case is checked against the vendored spec: the recorded request path is
 matched back to its OpenAPI path template, and that template must belong to the
@@ -84,6 +84,33 @@ CASES: list[Case] = [
         "/v1/tasks/T-42/occurrences/2026-08-05",
         {},
         {"status": "COMPLETED"},
+    ),
+    Case(
+        "appendTaskNote",
+        ("T-42", {"text": "Shipped the fix.", "author": "Claude Code"}),
+        {},
+        "/v1/tasks/T-42/notes",
+        {},
+        {"text": "Shipped the fix.", "author": "Claude Code"},
+    ),
+    Case("listNotes", ({"search": "runbook"},), {}, "/v1/notes", {"search": ["runbook"]}),
+    Case("getNote", ("n_1",), {}, "/v1/notes/n_1"),
+    Case("createNote", ({"title": "Runbook"},), {}, "/v1/notes", {}, {"title": "Runbook"}),
+    Case(
+        "updateNote",
+        ("n_1", {"body": "v2", "base_updated_at": "2026-11-03T21:00:00.000Z"}),
+        {},
+        "/v1/notes/n_1",
+        {},
+        {"body": "v2", "base_updated_at": "2026-11-03T21:00:00.000Z"},
+    ),
+    Case(
+        "appendNote",
+        ("n_1", {"text": "One more line."}),
+        {},
+        "/v1/notes/n_1/append",
+        {},
+        {"text": "One more line."},
     ),
     Case("getDailyPlan", ({"date": "2026-08-05"},), {}, "/v1/daily-plan", {"date": ["2026-08-05"]}),
     Case(
@@ -195,7 +222,7 @@ def mock_everything() -> None:
 
 def test_there_is_a_wire_case_for_every_operation():
     assert set(CASES_BY_ID) == set(OPERATION_MAP)
-    assert len(CASES) == 42
+    assert len(CASES) == 48
 
 
 @pytest.mark.parametrize("operation_id", sorted(CASES_BY_ID))

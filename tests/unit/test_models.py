@@ -31,6 +31,9 @@ FIXTURE_MODELS = [
     ("taskhistoryentry", "TaskHistoryEntry"),
     ("taskoccurrence", "TaskOccurrence"),
     ("taskdependencies", "TaskDependencies"),
+    ("note", "Note"),
+    ("notepreview", "NotePreview"),
+    ("tasknoteresult", "TaskNoteResult"),
     ("problem_missing_credentials", "Problem"),
 ]
 
@@ -53,10 +56,10 @@ def test_fixture_payload_round_trips_through_the_model(fixture: str, model_name:
 
 def test_every_named_object_schema_has_a_generated_model() -> None:
     spec_schemas = load_spec()["components"]["schemas"]
-    assert len(spec_schemas) == 68
+    assert len(spec_schemas) == 77
 
     object_schemas = {n for n, s in spec_schemas.items() if s.get("type") == "object"}
-    assert len(object_schemas) == 58
+    assert len(object_schemas) == 66
 
     generated = set(vars(models))
     missing = object_schemas - generated
@@ -64,7 +67,7 @@ def test_every_named_object_schema_has_a_generated_model() -> None:
 
 
 def test_string_enum_schemas_are_inlined_as_literal_unions() -> None:
-    """The 10 string enums become ``Literal[...]`` at each use site.
+    """The 11 string enums become ``Literal[...]`` at each use site.
 
     ``--enum-field-as-literal all`` is deliberate: callers pass and match plain
     strings (``status="TODO"``) instead of importing an enum class.
@@ -76,6 +79,7 @@ def test_string_enum_schemas_are_inlined_as_literal_unions() -> None:
         "DailyStatus",
         "RecurrenceBasis",
         "RecurrenceFrequency",
+        "TaskCreatedVia",
         "TaskOccurrenceStatus",
         "TaskPriority",
         "TaskStatus",

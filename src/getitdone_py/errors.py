@@ -68,6 +68,7 @@ ProblemCode = Literal[
     "idempotency_in_progress",
     "webhook_url_rejected",
     "delivery_already_pending",
+    "conflict",
     "dependency_cycle",
     "internal_error",
 ]
@@ -87,6 +88,7 @@ PROBLEM_CODES: tuple[str, ...] = (
     "idempotency_in_progress",
     "webhook_url_rejected",
     "delivery_already_pending",
+    "conflict",
     "dependency_cycle",
     "internal_error",
 )
@@ -228,7 +230,8 @@ class NotFoundError(APIError):
 
 
 class ConflictError(APIError):
-    """409 — ``idempotency_in_progress`` | ``delivery_already_pending``."""
+    """409 — ``idempotency_in_progress`` | ``delivery_already_pending`` | ``conflict``
+    | ``dependency_cycle``."""
 
 
 class UnprocessableEntityError(APIError):

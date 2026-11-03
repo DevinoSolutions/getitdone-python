@@ -6,6 +6,7 @@ from getitdone_py.resources.api_keys import ApiKeys, AsyncApiKeys
 from getitdone_py.resources.attachments import AsyncAttachments, Attachments
 from getitdone_py.resources.daily_plan import AsyncDailyPlan, DailyPlan
 from getitdone_py.resources.members import AsyncMembers, Members
+from getitdone_py.resources.notes import AsyncNotes, Notes
 from getitdone_py.resources.organizations import AsyncOrganizations, Organizations
 from getitdone_py.resources.projects import AsyncProjects, Projects
 from getitdone_py.resources.tasks import AsyncTasks, Tasks
@@ -18,6 +19,7 @@ __all__ = [
     "AsyncAttachments",
     "AsyncDailyPlan",
     "AsyncMembers",
+    "AsyncNotes",
     "AsyncOrganizations",
     "AsyncProjects",
     "AsyncTasks",
@@ -26,6 +28,7 @@ __all__ = [
     "Attachments",
     "DailyPlan",
     "Members",
+    "Notes",
     "Organizations",
     "Projects",
     "Tasks",

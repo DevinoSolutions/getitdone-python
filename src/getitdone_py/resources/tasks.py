@@ -52,6 +52,18 @@ class Tasks(Resource):
             "PATCH", f"/v1/tasks/{encode_path_param(task_id)}", body=body, options=options
         )
 
+    def append_note(
+        self, task_id: str, body: dict[str, Any], *, options: RequestOptions | None = None
+    ) -> Any:
+        """`appendTaskNote` — adds one dated entry to the end of the task's notes;
+        nothing already there changes, so two writers never overwrite each other."""
+        return self._request(
+            "POST",
+            f"/v1/tasks/{encode_path_param(task_id)}/notes",
+            body=body,
+            options=options,
+        )
+
     def archive(
         self,
         task_id: str,
@@ -212,6 +224,17 @@ class AsyncTasks(AsyncResource):
         """`updateTask`"""
         return await self._request(
             "PATCH", f"/v1/tasks/{encode_path_param(task_id)}", body=body, options=options
+        )
+
+    async def append_note(
+        self, task_id: str, body: dict[str, Any], *, options: RequestOptions | None = None
+    ) -> Any:
+        """`appendTaskNote`"""
+        return await self._request(
+            "POST",
+            f"/v1/tasks/{encode_path_param(task_id)}/notes",
+            body=body,
+            options=options,
         )
 
     async def archive(
