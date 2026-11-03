@@ -1,4 +1,4 @@
-"""Idempotency-Key semantics on the 11 declared-idempotent POSTs."""
+"""Idempotency-Key semantics on the 12 declared-idempotent POSTs."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from tests.helpers import spec_operations
 
 BASE = "https://api.test"
 
-#: The 11 POSTs the /v1 registry declares idempotent (x-idempotent: true).
+#: The 12 POSTs the /v1 registry declares idempotent (x-idempotent: true).
 IDEMPOTENT_OPERATIONS = [
     ("POST", "/v1/projects"),
     ("POST", "/v1/api-keys"),
@@ -24,18 +24,22 @@ IDEMPOTENT_OPERATIONS = [
     ("POST", "/v1/tasks/T-1/attachments"),
     ("POST", "/v1/webhook-endpoints"),
     ("POST", "/v1/webhook-endpoints/e1/rotate-secret"),
+    ("POST", "/v1/notes"),
 ]
 
-#: POSTs that are deliberately NOT idempotent — re-runnable probes and replays.
+#: POSTs that are deliberately NOT idempotent — re-runnable probes, replays and
+#: note appends (each call adds one more entry).
 NON_IDEMPOTENT_POSTS = [
     "/v1/webhook-endpoints/e1/verify",
     "/v1/webhook-endpoints/e1/test-event",
     "/v1/webhook-endpoints/e1/deliveries/d1/replay",
     "/v1/webhook-endpoints/e1/replay-failed",
+    "/v1/tasks/T-1/notes",
+    "/v1/notes/n1/append",
 ]
 
 
-def test_the_spec_declares_exactly_eleven_idempotent_operations():
+def test_the_spec_declares_exactly_twelve_idempotent_operations():
     idempotent = {op for op, (_, _, idem, _) in spec_operations().items() if idem}
     assert idempotent == {
         "createProject",
@@ -49,8 +53,9 @@ def test_the_spec_declares_exactly_eleven_idempotent_operations():
         "createTaskAttachment",
         "createWebhookEndpoint",
         "rotateWebhookEndpointSecret",
+        "createNote",
     }
-    assert len(idempotent) == 11
+    assert len(idempotent) == 12
 
 
 @pytest.mark.parametrize(("method", "path"), IDEMPOTENT_OPERATIONS)

@@ -1,7 +1,7 @@
 """The mechanical parity gate: every spec operation has exactly one SDK method.
 
-This is the test that guarantees 42/42 endpoint coverage and goes RED the day
-the API adds a 43rd route — a missing binding cannot ship unnoticed.
+This is the test that guarantees 48/48 endpoint coverage and goes RED the day
+the API adds a 49th route — a missing binding cannot ship unnoticed.
 
 ``OPERATION_MAP`` is written by hand on purpose. It is the explicit claim
 "operationId X is reachable as client.<this>", checked against the vendored
@@ -41,6 +41,12 @@ OPERATION_MAP: dict[str, str] = {
     "removeTaskDependency": "tasks.remove_dependency",
     "listTaskOccurrences": "tasks.list_occurrences",
     "setTaskOccurrenceStatus": "tasks.set_occurrence_status",
+    "appendTaskNote": "tasks.append_note",
+    "listNotes": "notes.list",
+    "getNote": "notes.retrieve",
+    "createNote": "notes.create",
+    "updateNote": "notes.update",
+    "appendNote": "notes.append",
     "getDailyPlan": "daily_plan.retrieve",
     "setDailyPlanStatus": "daily_plan.set_status",
     "createDailyPlanEntry": "daily_plan.create_entry",
@@ -81,8 +87,8 @@ def async_client() -> AsyncGetItDone:
     return AsyncGetItDone(api_key="gid_x", base_url="https://api.test")
 
 
-def test_the_spec_still_declares_exactly_forty_two_operations():
-    assert len(spec_operations()) == 42
+def test_the_spec_still_declares_exactly_forty_eight_operations():
+    assert len(spec_operations()) == 48
 
 
 def test_the_operation_map_covers_every_spec_operation_and_invents_none():
@@ -90,11 +96,11 @@ def test_the_operation_map_covers_every_spec_operation_and_invents_none():
     mapped = set(OPERATION_MAP)
     assert mapped - spec_ids == set(), "OPERATION_MAP names operations the spec does not have"
     assert spec_ids - mapped == set(), "spec operations with no SDK method"
-    assert len(OPERATION_MAP) == 42
+    assert len(OPERATION_MAP) == 48
 
 
 def test_every_operation_maps_to_a_distinct_sdk_method():
-    assert len(set(OPERATION_MAP.values())) == 42
+    assert len(set(OPERATION_MAP.values())) == 48
 
 
 @pytest.mark.parametrize("operation_id", sorted(OPERATION_MAP))
@@ -113,8 +119,8 @@ def test_every_operation_is_bound_and_callable_on_the_async_client(
     assert callable(method), f"{OPERATION_MAP[operation_id]} is not callable"
 
 
-def test_the_ten_paginated_operations_return_a_paginator_type(client: GetItDone):
-    """The 10 cursor-paginated lists — everything else returns data directly."""
+def test_the_eleven_paginated_operations_return_a_paginator_type(client: GetItDone):
+    """The 11 cursor-paginated lists — everything else returns data directly."""
     paginated = {
         "listOrganizations",
         "listMembers",
@@ -126,8 +132,9 @@ def test_the_ten_paginated_operations_return_a_paginator_type(client: GetItDone)
         "listTaskAttachments",
         "listWebhookEndpoints",
         "listWebhookEndpointDeliveries",
+        "listNotes",
     }
-    assert len(paginated) == 10
+    assert len(paginated) == 11
     assert paginated <= set(OPERATION_MAP)
 
     for operation_id in paginated:
@@ -136,7 +143,7 @@ def test_the_ten_paginated_operations_return_a_paginator_type(client: GetItDone)
         assert "Paginator" in str(annotation), f"{operation_id} does not return a Paginator"
 
 
-def test_only_the_eleven_idempotent_operations_expose_an_idempotency_key_argument(
+def test_only_the_twelve_idempotent_operations_expose_an_idempotency_key_argument(
     client: GetItDone,
 ):
     with_key = set()
@@ -147,4 +154,4 @@ def test_only_the_eleven_idempotent_operations_expose_an_idempotency_key_argumen
 
     declared = {op for op, (_, _, idempotent, _) in spec_operations().items() if idempotent}
     assert with_key == declared
-    assert len(with_key) == 11
+    assert len(with_key) == 12

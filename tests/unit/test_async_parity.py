@@ -17,6 +17,7 @@ RESOURCE_NAMES = [
     "members",
     "projects",
     "tasks",
+    "notes",
     "daily_plan",
     "attachments",
     "api_keys",
@@ -41,7 +42,7 @@ def public_methods(resource: object) -> dict[str, object]:
     }
 
 
-def test_both_clients_expose_the_same_nine_resource_namespaces(
+def test_both_clients_expose_the_same_ten_resource_namespaces(
     clients: tuple[GetItDone, AsyncGetItDone],
 ):
     sync_client, async_client = clients

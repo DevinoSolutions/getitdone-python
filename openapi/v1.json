@@ -24,46 +24,62 @@
     "tags": [
         {
             "name": "Organizations",
+            "x-displayName": "Organizations",
             "description": "Organizations (workspaces) — the tenant every task, project and API credential belongs to."
         },
         {
             "name": "Usage",
+            "x-displayName": "Usage",
             "description": "Plan usage — billing period, per-meter consumption, and the per-credential burst policy."
         },
         {
             "name": "Members",
+            "x-displayName": "Members",
             "description": "The organization's member roster."
         },
         {
             "name": "Projects",
+            "x-displayName": "Projects",
             "description": "Named groupings of tasks within an organization."
         },
         {
             "name": "API keys",
+            "x-displayName": "API keys",
             "description": "The organization's API credentials — list, mint and revoke."
         },
         {
             "name": "Tasks",
+            "x-displayName": "Tasks",
             "description": "Tasks — the core work items. Public ids are product short ids (`T-123`); every content change is an immutable version, browsable via the history endpoint."
         },
         {
             "name": "Task occurrences",
+            "x-displayName": "Task occurrences",
             "description": "The per-day ledger of a repeating task — one date-keyed row per day it is due, each completed or skipped independently (including past days and days finished early)."
         },
         {
             "name": "Task dependencies",
+            "x-displayName": "Task dependencies",
             "description": "Finish-to-start links between tasks — what a task is blocked by and what it blocks. The graph is guaranteed acyclic, and blocked state is derived on read rather than stored."
         },
         {
             "name": "Daily plan",
+            "x-displayName": "Daily plan",
             "description": "The credential user's per-date daily board: a TODO (plan) section and a PROGRESS section, each holding planned tasks."
         },
         {
             "name": "Attachments",
+            "x-displayName": "Attachments",
             "description": "Task file attachments — two-phase presigned uploads and short-lived presigned downloads."
         },
         {
+            "name": "Notes",
+            "x-displayName": "Notes",
+            "description": "Notes"
+        },
+        {
             "name": "Webhook endpoints",
+            "x-displayName": "Webhook endpoints",
             "description": "Outbound customer webhook endpoints (PRO+) — register, verify, rotate secrets, send test events, and read the delivery log."
         }
     ],
@@ -630,7 +646,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -840,7 +859,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -1493,7 +1515,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -2146,7 +2171,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -2184,7 +2212,10 @@
                             "description": "Only direct subtasks of this task. An unknown (or other-organization) parent answers 404 `resource_not_found`.",
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "description": "Only direct subtasks of this task. An unknown (or other-organization) parent answers 404 `resource_not_found`."
                     },
@@ -2644,7 +2675,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -2842,7 +2876,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -3072,7 +3109,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -3343,7 +3383,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -3616,7 +3659,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -3636,7 +3682,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -3858,7 +3907,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -3887,7 +3939,10 @@
                             "description": "Only occurrences on or after this calendar day (YYYY-MM-DD).",
                             "type": "string",
                             "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-                            "example": "2026-08-06"
+                            "example": "2026-08-06",
+                            "examples": [
+                                "2026-08-06"
+                            ]
                         },
                         "description": "Only occurrences on or after this calendar day (YYYY-MM-DD)."
                     },
@@ -3898,7 +3953,10 @@
                             "description": "Only occurrences on or before this calendar day (YYYY-MM-DD).",
                             "type": "string",
                             "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-                            "example": "2026-08-06"
+                            "example": "2026-08-06",
+                            "examples": [
+                                "2026-08-06"
+                            ]
                         },
                         "description": "Only occurrences on or before this calendar day (YYYY-MM-DD)."
                     },
@@ -3909,7 +3967,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -4129,7 +4190,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -4141,7 +4205,10 @@
                             "type": "string",
                             "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                             "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.",
-                            "example": "2026-08-06"
+                            "example": "2026-08-06",
+                            "examples": [
+                                "2026-08-06"
+                            ]
                         },
                         "required": true,
                         "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone."
@@ -4371,7 +4438,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -4569,7 +4639,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -4850,7 +4923,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -4862,7 +4938,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "The blocker to unlink from the task in the path.",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "The blocker to unlink from the task in the path."
@@ -5083,7 +5162,10 @@
                             "format": "date",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
                             "description": "Board date as YYYY-MM-DD (UTC day).",
-                            "example": "2026-07-23"
+                            "example": "2026-07-23",
+                            "examples": [
+                                "2026-07-23"
+                            ]
                         },
                         "required": true,
                         "description": "Board date as YYYY-MM-DD (UTC day)."
@@ -5282,7 +5364,10 @@
                             "format": "date",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
                             "description": "Board date as YYYY-MM-DD (UTC day).",
-                            "example": "2026-07-23"
+                            "example": "2026-07-23",
+                            "examples": [
+                                "2026-07-23"
+                            ]
                         },
                         "required": true,
                         "description": "Board date as YYYY-MM-DD (UTC day)."
@@ -6163,7 +6248,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -6183,7 +6271,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -6401,7 +6492,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -6682,7 +6776,10 @@
                             "type": "string",
                             "pattern": "^(?:T-)?[0-9]{1,12}$",
                             "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                            "example": "T-123"
+                            "example": "T-123",
+                            "examples": [
+                                "T-123"
+                            ]
                         },
                         "required": true,
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input)."
@@ -7129,6 +7226,1347 @@
                 }
             }
         },
+        "/v1/notes": {
+            "get": {
+                "operationId": "listNotes",
+                "summary": "List workspace notes",
+                "description": "Cursor-paginated list of the organization's shared notes, newest first. Returns previews; use the get endpoint for the full body.",
+                "tags": [
+                    "Notes"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:read"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "default": 25,
+                            "description": "Maximum number of items to return (1-100).",
+                            "example": 25,
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
+                        },
+                        "description": "Maximum number of items to return (1-100)."
+                    },
+                    {
+                        "in": "query",
+                        "name": "after",
+                        "schema": {
+                            "description": "Opaque cursor from a previous page's `next_cursor` — omit for the first page. Reusing a cursor with DIFFERENT query parameters (e.g. a different `limit`) answers 400 `validation_failed`.",
+                            "type": "string"
+                        },
+                        "description": "Opaque cursor from a previous page's `next_cursor` — omit for the first page. Reusing a cursor with DIFFERENT query parameters (e.g. a different `limit`) answers 400 `validation_failed`."
+                    },
+                    {
+                        "in": "query",
+                        "name": "search",
+                        "schema": {
+                            "description": "Case-insensitive substring search across note titles and bodies.",
+                            "type": "string"
+                        },
+                        "description": "Case-insensitive substring search across note titles and bodies."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Page of the organization's notes.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NoteList"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "operationId": "createNote",
+                "summary": "Create a note",
+                "description": "Creates a workspace note in the credential's organization. A title that already exists answers 400 `validation_failed`.",
+                "tags": [
+                    "Notes"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:write"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": true,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "Idempotency-Key",
+                        "schema": {
+                            "description": "Optional client-generated key (1-255 visible ASCII characters; a UUID works) making this POST safely retryable. Retrying with the SAME key and byte-identical body within 24h replays the stored first response (marked `Idempotency-Replayed: true`, never re-executed, never charged against quota). The same key with a different body answers 422 `idempotency_key_reused`; a retry racing the first execution answers 409 `idempotency_in_progress`. Omitting the header executes normally with no idempotency guarantee.",
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                        },
+                        "description": "Optional client-generated key (1-255 visible ASCII characters; a UUID works) making this POST safely retryable. Retrying with the SAME key and byte-identical body within 24h replays the stored first response (marked `Idempotency-Replayed: true`, never re-executed, never charged against quota). The same key with a different body answers 422 `idempotency_key_reused`; a retry racing the first execution answers 409 `idempotency_in_progress`. Omitting the header executes normally with no idempotency guarantee."
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateNoteBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The created note.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Note"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "A request with this Idempotency-Key is still executing — `idempotency_in_progress`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Idempotency-Key reused with a different request body — `idempotency_key_reused`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notes/{note_id}": {
+            "get": {
+                "operationId": "getNote",
+                "summary": "Get a note",
+                "description": "Fetches a single workspace note by id, including the full body. Scoped to the credential's organization.",
+                "tags": [
+                    "Notes"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:read"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "note_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The note with full body.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Note"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "updateNote",
+                "summary": "Update a note",
+                "description": "Rewrites a note's title and/or body. Requires `base_updated_at` (the `updated_at` from the last read) — the update is refused with 409 `conflict` if the note has been modified since, preventing agents from silently overwriting each other.",
+                "tags": [
+                    "Notes"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:write"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "note_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateNoteBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The updated note.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Note"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notes/{note_id}/append": {
+            "post": {
+                "operationId": "appendNote",
+                "summary": "Append to a note",
+                "description": "Appends a dated entry to the end of a workspace note without rewriting it. Use this for incremental additions (status updates, log entries) instead of the full-body update.",
+                "tags": [
+                    "Notes"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:write"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "note_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppendNoteBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The note after the append.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Note"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/tasks/{task_id}/notes": {
+            "post": {
+                "operationId": "appendTaskNote",
+                "summary": "Append to a task's notes",
+                "description": "Appends a dated entry to the end of a task's notes without rewriting them. The task_id may be the stable id or the short id. Use this for progress updates, handover entries, and structured log entries that should live on the task itself.",
+                "tags": [
+                    "Tasks"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "x-scopes": [
+                    "tasks:write"
+                ],
+                "x-entitlement": "public_api",
+                "x-idempotent": false,
+                "x-meter": {
+                    "metric": "API_CALLS",
+                    "cost": 1
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppendTaskNoteBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The task note after the append.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            },
+                            "RateLimit-Policy": {
+                                "required": true,
+                                "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 structured-field policy list, burst window first, e.g. `\"per-key-minute\";q=120;w=60, \"api-calls-period\";q=50000;w=2592000`."
+                                }
+                            },
+                            "RateLimit": {
+                                "required": true,
+                                "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "IETF draft-11 current state of the primary (burst) policy, e.g. `\"per-key-minute\";r=97;t=42`."
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "required": true,
+                                "description": "Primary window request allowance (de-facto trio).",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Primary window request allowance (de-facto trio)."
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "required": true,
+                                "description": "Requests remaining in the primary window.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Requests remaining in the primary window."
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "required": true,
+                                "description": "Unix epoch seconds at which the primary window resets.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unix epoch seconds at which the primary window resets."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskNoteResult"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed request — `validation_failed` (see `errors`; a malformed `Idempotency-Key` header lands here too).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid credentials — `missing_credentials`, `invalid_api_key` or `invalid_token`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authenticated but denied — `insufficient_scope` or `feature_not_enabled`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such resource in this organization — `resource_not_found`.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Over a limit — `rate_limited` (burst; retry after `Retry-After`) or `quota_exhausted` (billing-period allowance).",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error — `internal_error`; quote `request_id` when reporting.",
+                        "headers": {
+                            "x-request-id": {
+                                "required": true,
+                                "description": "Unique id for this request — present on EVERY response; quote it in support requests.",
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Unique id for this request — present on EVERY response; quote it in support requests."
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/webhook-endpoints": {
             "get": {
                 "operationId": "listWebhookEndpoints",
@@ -7161,7 +8599,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -8941,7 +10382,10 @@
                             "example": 25,
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 100
+                            "maximum": 100,
+                            "examples": [
+                                25
+                            ]
                         },
                         "description": "Maximum number of items to return (1-100)."
                     },
@@ -9618,7 +11062,10 @@
                         "minLength": 1,
                         "maxLength": 200,
                         "description": "Display name, 1-200 characters after trimming.",
-                        "example": "Website redesign"
+                        "example": "Website redesign",
+                        "examples": [
+                            "Website redesign"
+                        ]
                     },
                     "description": {
                         "description": "Optional free-text description (max 2000 characters).",
@@ -9640,7 +11087,10 @@
                         "minLength": 1,
                         "maxLength": 200,
                         "description": "Caller-given label for the key.",
-                        "example": "CI deploy bot"
+                        "example": "CI deploy bot",
+                        "examples": [
+                            "CI deploy bot"
+                        ]
                     },
                     "scopes": {
                         "description": "Subset of scopes to grant. Defaults to every scope EXCEPT `api-keys:manage` — key-minting is never granted by default and must be requested explicitly.",
@@ -9657,7 +11107,13 @@
                                 "usage:read",
                                 "api-keys:manage",
                                 "webhooks:read",
-                                "webhooks:write"
+                                "webhooks:write",
+                                "destructive:run",
+                                "billing:manage",
+                                "account:manage",
+                                "team:manage",
+                                "connections:manage",
+                                "support:write"
                             ]
                         }
                     },
@@ -9696,7 +11152,10 @@
                         "minLength": 1,
                         "maxLength": 500,
                         "description": "Task title, 1-500 characters after trimming.",
-                        "example": "Ship the public API"
+                        "example": "Ship the public API",
+                        "examples": [
+                            "Ship the public API"
+                        ]
                     },
                     "description": {
                         "type": "string",
@@ -9738,7 +11197,10 @@
                         "description": "Create as a subtask of this task (short id, must belong to the credential's organization).",
                         "type": "string",
                         "pattern": "^(?:T-)?[0-9]{1,12}$",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     }
                 },
                 "required": [
@@ -9828,7 +11290,10 @@
                         "type": "string",
                         "pattern": "^(?:T-)?[0-9]{1,12}$",
                         "description": "The task that must finish FIRST. It must be in the same organization as the task in the path.",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     }
                 },
                 "required": [
@@ -9883,7 +11348,10 @@
                         "type": "string",
                         "pattern": "^(?:T-)?[0-9]{1,12}$",
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     },
                     "section": {
                         "$ref": "#/components/schemas/DailySection"
@@ -9949,13 +11417,19 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 255,
-                        "example": "screenshot.png"
+                        "example": "screenshot.png",
+                        "examples": [
+                            "screenshot.png"
+                        ]
                     },
                     "content_type": {
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 255,
-                        "example": "image/png"
+                        "example": "image/png",
+                        "examples": [
+                            "image/png"
+                        ]
                     },
                     "size": {
                         "type": "integer",
@@ -9971,6 +11445,101 @@
                 ],
                 "description": "What you are about to upload."
             },
+            "CreateNoteBody": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Note title (1-200 characters after trimming).",
+                        "example": "Deployment runbook",
+                        "examples": [
+                            "Deployment runbook"
+                        ]
+                    },
+                    "body": {
+                        "default": "",
+                        "description": "Note body, plain text or Markdown (max 100000 characters). Defaults to empty.",
+                        "type": "string",
+                        "maxLength": 100000
+                    },
+                    "project_id": {
+                        "description": "Optional project to attach the note to. Must be a project in the same organization.",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "title"
+                ],
+                "description": "Fields for creating a workspace note."
+            },
+            "UpdateNoteBody": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "description": "New title (1-200 characters after trimming).",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "body": {
+                        "description": "New body (max 100000 characters). Replaces the entire body.",
+                        "type": "string",
+                        "maxLength": 100000
+                    },
+                    "base_updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                        "description": "The `updated_at` value from the last read of this note. The update is refused with 409 `conflict` if the note has been modified since this timestamp — re-read the note and rebase your changes. This prevents agents from silently overwriting each other's edits."
+                    }
+                },
+                "required": [
+                    "base_updated_at"
+                ],
+                "description": "Fields for updating a note. Requires the base_updated_at compare-and-set value."
+            },
+            "AppendNoteBody": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000,
+                        "description": "The entry to append (1-10000 characters). A date header is prepended automatically."
+                    },
+                    "author": {
+                        "description": "Author label for the entry. Defaults to the credential label.",
+                        "type": "string",
+                        "maxLength": 100
+                    }
+                },
+                "required": [
+                    "text"
+                ],
+                "description": "A dated entry to append to a note."
+            },
+            "AppendTaskNoteBody": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000,
+                        "description": "The entry to append (1-10000 characters). A date header is prepended automatically."
+                    },
+                    "author": {
+                        "description": "Author label for the entry. Defaults to the credential label.",
+                        "type": "string",
+                        "maxLength": 100
+                    }
+                },
+                "required": [
+                    "text"
+                ],
+                "description": "A dated entry to append to a task's notes without rewriting them."
+            },
             "CreateWebhookEndpointBody": {
                 "type": "object",
                 "properties": {
@@ -9979,7 +11548,10 @@
                         "minLength": 1,
                         "maxLength": 2048,
                         "description": "The https destination URL. Must be https, port 443 (explicit or default), and carry no `user:pass@` credentials — a URL failing this check answers 422 `webhook_url_rejected` with the specific reason and creates NO row.",
-                        "example": "https://example.com/webhooks/getitdone"
+                        "example": "https://example.com/webhooks/getitdone",
+                        "examples": [
+                            "https://example.com/webhooks/getitdone"
+                        ]
                     },
                     "event_types": {
                         "description": "Subset of event types to subscribe to. Omit or send an empty array to subscribe to every type.",
@@ -10059,7 +11631,10 @@
                         "format": "date-time",
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Only FAILED/DISABLED deliveries created at or after this ISO-8601 instant are replayed.",
-                        "example": "2026-07-24T00:00:00Z"
+                        "example": "2026-07-24T00:00:00Z",
+                        "examples": [
+                            "2026-07-24T00:00:00Z"
+                        ]
                     }
                 },
                 "required": [
@@ -10103,17 +11678,26 @@
                     "id": {
                         "type": "string",
                         "description": "Stable opaque organization id.",
-                        "example": "9f6acab2-8f8e-4c7e-9c3a-2f6d0c9e4b11"
+                        "example": "9f6acab2-8f8e-4c7e-9c3a-2f6d0c9e4b11",
+                        "examples": [
+                            "9f6acab2-8f8e-4c7e-9c3a-2f6d0c9e4b11"
+                        ]
                     },
                     "name": {
                         "type": "string",
                         "description": "Display name.",
-                        "example": "Acme Inc"
+                        "example": "Acme Inc",
+                        "examples": [
+                            "Acme Inc"
+                        ]
                     },
                     "slug": {
                         "type": "string",
                         "description": "URL-safe unique slug.",
-                        "example": "acme-inc"
+                        "example": "acme-inc",
+                        "examples": [
+                            "acme-inc"
+                        ]
                     },
                     "image_url": {
                         "description": "Logo URL, or null when none is set.",
@@ -10127,7 +11711,10 @@
                         "format": "date-time",
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Creation time, ISO-8601 UTC.",
-                        "example": "2026-01-15T09:30:00.000Z"
+                        "example": "2026-01-15T09:30:00.000Z",
+                        "examples": [
+                            "2026-01-15T09:30:00.000Z"
+                        ]
                     }
                 },
                 "required": [
@@ -10146,7 +11733,10 @@
                     "type": {
                         "type": "string",
                         "description": "URI identifying the problem class; resolves to its docs page.",
-                        "example": "https://nowgetitdone.com/docs/api/problems/validation-failed"
+                        "example": "https://nowgetitdone.com/docs/api/problems/validation-failed",
+                        "examples": [
+                            "https://nowgetitdone.com/docs/api/problems/validation-failed"
+                        ]
                     },
                     "title": {
                         "type": "string",
@@ -10157,7 +11747,10 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
                         "description": "HTTP status code, duplicated from the response.",
-                        "example": 400
+                        "example": 400,
+                        "examples": [
+                            400
+                        ]
                     },
                     "detail": {
                         "description": "Human-readable explanation specific to this occurrence.",
@@ -10180,6 +11773,7 @@
                             "idempotency_in_progress",
                             "webhook_url_rejected",
                             "delivery_already_pending",
+                            "conflict",
                             "dependency_cycle",
                             "internal_error"
                         ],
@@ -10213,12 +11807,18 @@
                     "pointer": {
                         "type": "string",
                         "description": "RFC 6901 JSON Pointer to the offending request field.",
-                        "example": "/name"
+                        "example": "/name",
+                        "examples": [
+                            "/name"
+                        ]
                     },
                     "code": {
                         "type": "string",
                         "description": "Machine-readable per-field validation code.",
-                        "example": "invalid_type"
+                        "example": "invalid_type",
+                        "examples": [
+                            "invalid_type"
+                        ]
                     },
                     "message": {
                         "type": "string",
@@ -10244,21 +11844,30 @@
                             "TEAM"
                         ],
                         "description": "The organization's current plan tier.",
-                        "example": "FREE"
+                        "example": "FREE",
+                        "examples": [
+                            "FREE"
+                        ]
                     },
                     "period_start": {
                         "type": "string",
                         "format": "date-time",
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "Start of the current billing period, ISO-8601 UTC. Paid plans anchor at their subscription renewal; free plans at the first of the calendar month.",
-                        "example": "2026-07-01T00:00:00.000Z"
+                        "example": "2026-07-01T00:00:00.000Z",
+                        "examples": [
+                            "2026-07-01T00:00:00.000Z"
+                        ]
                     },
                     "period_end": {
                         "type": "string",
                         "format": "date-time",
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                         "description": "End of the current billing period, ISO-8601 UTC — when period meters reset.",
-                        "example": "2026-08-01T00:00:00.000Z"
+                        "example": "2026-08-01T00:00:00.000Z",
+                        "examples": [
+                            "2026-08-01T00:00:00.000Z"
+                        ]
                     },
                     "meters": {
                         "type": "array",
@@ -10275,7 +11884,10 @@
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991,
                                 "description": "Requests each individual credential may make per minute before 429 rate_limited.",
-                                "example": 10
+                                "example": 10,
+                                "examples": [
+                                    10
+                                ]
                             }
                         },
                         "required": [
@@ -10304,28 +11916,40 @@
                             "api_calls"
                         ],
                         "description": "Which allowance this entry reports.",
-                        "example": "api_calls"
+                        "example": "api_calls",
+                        "examples": [
+                            "api_calls"
+                        ]
                     },
                     "used": {
                         "type": "integer",
                         "minimum": 0,
                         "maximum": 9007199254740991,
                         "description": "Units consumed so far in the current period.",
-                        "example": 27
+                        "example": 27,
+                        "examples": [
+                            27
+                        ]
                     },
                     "limit": {
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
                         "description": "The plan's allowance for this meter per period.",
-                        "example": 50
+                        "example": 50,
+                        "examples": [
+                            50
+                        ]
                     },
                     "remaining": {
                         "type": "integer",
                         "minimum": 0,
                         "maximum": 9007199254740991,
                         "description": "Units left before requests answer 429 quota_exhausted.",
-                        "example": 23
+                        "example": 23,
+                        "examples": [
+                            23
+                        ]
                     }
                 },
                 "required": [
@@ -10380,7 +12004,10 @@
                     "role": {
                         "type": "string",
                         "description": "The member's role in the organization.",
-                        "example": "owner"
+                        "example": "owner",
+                        "examples": [
+                            "owner"
+                        ]
                     },
                     "created_at": {
                         "type": "string",
@@ -10465,7 +12092,10 @@
                     "name": {
                         "type": "string",
                         "description": "Display name, unique within the organization.",
-                        "example": "Website redesign"
+                        "example": "Website redesign",
+                        "examples": [
+                            "Website redesign"
+                        ]
                     },
                     "description": {
                         "description": "Free-text description, or null when unset.",
@@ -10562,7 +12192,13 @@
                                 "usage:read",
                                 "api-keys:manage",
                                 "webhooks:read",
-                                "webhooks:write"
+                                "webhooks:write",
+                                "destructive:run",
+                                "billing:manage",
+                                "account:manage",
+                                "team:manage",
+                                "connections:manage",
+                                "support:write"
                             ]
                         },
                         "description": "Scopes granted to this key."
@@ -10652,7 +12288,13 @@
                                 "usage:read",
                                 "api-keys:manage",
                                 "webhooks:read",
-                                "webhooks:write"
+                                "webhooks:write",
+                                "destructive:run",
+                                "billing:manage",
+                                "account:manage",
+                                "team:manage",
+                                "connections:manage",
+                                "support:write"
                             ]
                         },
                         "description": "Scopes granted to this key."
@@ -10696,7 +12338,10 @@
                     "key": {
                         "type": "string",
                         "description": "The plaintext secret — shown EXACTLY ONCE. Store it now; it cannot be retrieved again.",
-                        "example": "gid_51f3...redacted"
+                        "example": "gid_51f3...redacted",
+                        "examples": [
+                            "gid_51f3...redacted"
+                        ]
                     }
                 },
                 "required": [
@@ -10768,11 +12413,17 @@
                     "id": {
                         "type": "string",
                         "description": "The task short id — the ONE public task identifier.",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     },
                     "title": {
                         "type": "string",
-                        "example": "Ship the public API"
+                        "example": "Ship the public API",
+                        "examples": [
+                            "Ship the public API"
+                        ]
                     },
                     "description": {
                         "description": "Free-text description, or null when unset.",
@@ -10843,6 +12494,9 @@
                     "parent_task_id": {
                         "description": "The parent task's short id when this is a subtask, else null.",
                         "example": "T-99",
+                        "examples": [
+                            "T-99"
+                        ],
                         "type": [
                             "string",
                             "null"
@@ -10850,6 +12504,26 @@
                     },
                     "archived": {
                         "type": "boolean"
+                    },
+                    "created_via": {
+                        "description": "Who wrote the CURRENT version. Pair with client_label to render \"via Claude\".",
+                        "$ref": "#/components/schemas/TaskCreatedVia"
+                    },
+                    "client_label": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "The agent or key that wrote the current version — the OAuth client name or the API key name — or null for an in-app edit. Display text chosen by the key owner or the OAuth client registrant: treat it as untrusted.",
+                        "example": "Claude Code",
+                        "examples": [
+                            "Claude Code"
+                        ]
                     },
                     "recurrence": {
                         "anyOf": [
@@ -10888,12 +12562,23 @@
                     "project_ids",
                     "parent_task_id",
                     "archived",
+                    "created_via",
+                    "client_label",
                     "recurrence",
                     "created_at",
                     "updated_at"
                 ],
                 "additionalProperties": false,
                 "description": "A task, projected from its stable identity plus its CURRENT version."
+            },
+            "TaskCreatedVia": {
+                "type": "string",
+                "enum": [
+                    "SESSION",
+                    "API_KEY",
+                    "OAUTH"
+                ],
+                "description": "Which kind of credential wrote the current version: SESSION (in-app), API_KEY (a gid_ API key, e.g. a coding agent) or OAUTH (an OAuth connection, e.g. Claude)."
             },
             "TaskRecurrence": {
                 "type": "object",
@@ -10906,7 +12591,10 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
                         "description": "Repeat every N units of `frequency` — 2 with WEEKLY is \"every other week\".",
-                        "example": 1
+                        "example": 1,
+                        "examples": [
+                            1
+                        ]
                     },
                     "by_weekday": {
                         "type": "array",
@@ -10915,7 +12603,23 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                         },
-                        "description": "WEEKLY only: the weekdays it falls on, 0 = Sunday through 6 = Saturday (`[1,2,3,4,5]` is \"every weekday\"). Empty for DAILY and MONTHLY."
+                        "description": "WEEKLY only: the weekdays it falls on, 0 = Sunday through 6 = Saturday (`[1,2,3,4,5]` is \"every weekday\"). Empty for DAILY and MONTHLY.",
+                        "example": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            5
+                        ],
+                        "examples": [
+                            [
+                                1,
+                                2,
+                                3,
+                                4,
+                                5
+                            ]
+                        ]
                     },
                     "by_month_day": {
                         "anyOf": [
@@ -10928,7 +12632,11 @@
                                 "type": "null"
                             }
                         ],
-                        "description": "MONTHLY only: day of the month, 1-31, clamped to the last day of shorter months (31 lands on Feb 28, or Feb 29 in a leap year). Null otherwise."
+                        "description": "MONTHLY only: day of the month, 1-31, clamped to the last day of shorter months (31 lands on Feb 28, or Feb 29 in a leap year). Null otherwise.",
+                        "example": 15,
+                        "examples": [
+                            15
+                        ]
                     },
                     "basis": {
                         "$ref": "#/components/schemas/RecurrenceBasis"
@@ -10936,13 +12644,19 @@
                     "timezone": {
                         "type": "string",
                         "description": "IANA timezone whose CALENDAR DAYS the occurrences fall on.",
-                        "example": "America/Toronto"
+                        "example": "America/Toronto",
+                        "examples": [
+                            "America/Toronto"
+                        ]
                     },
                     "start_date": {
                         "type": "string",
                         "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                         "description": "First day the task may recur (RRULE DTSTART). No occurrence is ever created before it.",
-                        "example": "2026-08-06"
+                        "example": "2026-08-06",
+                        "examples": [
+                            "2026-08-06"
+                        ]
                     },
                     "end_date": {
                         "anyOf": [
@@ -10950,7 +12664,10 @@
                                 "type": "string",
                                 "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                                 "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.",
-                                "example": "2026-08-06"
+                                "example": "2026-08-06",
+                                "examples": [
+                                    "2026-08-06"
+                                ]
                             },
                             {
                                 "type": "null"
@@ -10969,7 +12686,11 @@
                                 "type": "null"
                             }
                         ],
-                        "description": "Total number of occurrences the schedule stops after (RRULE COUNT), or null."
+                        "description": "Total number of occurrences the schedule stops after (RRULE COUNT), or null.",
+                        "example": 10,
+                        "examples": [
+                            10
+                        ]
                     },
                     "rollover_enabled": {
                         "type": "boolean",
@@ -10982,7 +12703,10 @@
                     "rrule": {
                         "type": "string",
                         "description": "RFC 5545 projection of the fields above, derived on read — never stored, never accepted on input.",
-                        "example": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                        "example": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+                        "examples": [
+                            "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                        ]
                     }
                 },
                 "required": [
@@ -11172,20 +12896,29 @@
                     "task_id": {
                         "type": "string",
                         "description": "The repeating task's short id.",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     },
                     "occurrence_date": {
                         "type": "string",
                         "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                         "description": "The calendar day the occurrence is for, as YYYY-MM-DD in the recurrence timezone.",
-                        "example": "2026-08-06"
+                        "example": "2026-08-06",
+                        "examples": [
+                            "2026-08-06"
+                        ]
                     },
                     "sequence": {
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
                         "description": "1-based ordinal of this day within the series — what an RRULE COUNT limit and streak math count.",
-                        "example": 12
+                        "example": 12,
+                        "examples": [
+                            12
+                        ]
                     },
                     "status": {
                         "$ref": "#/components/schemas/TaskOccurrenceStatus"
@@ -11221,7 +12954,10 @@
                         "type": "string",
                         "pattern": "^(?:T-)?[0-9]{1,12}$",
                         "description": "The task this view is for.",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     },
                     "is_blocked": {
                         "type": "boolean",
@@ -11232,14 +12968,20 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
                         "description": "How many tasks must finish first, open or not — `blocked_by.length`.",
-                        "example": 2
+                        "example": 2,
+                        "examples": [
+                            2
+                        ]
                     },
                     "blocking_count": {
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
                         "description": "How many tasks wait on this one — `blocking.length`.",
-                        "example": 1
+                        "example": 1,
+                        "examples": [
+                            1
+                        ]
                     },
                     "blocked_by": {
                         "type": "array",
@@ -11274,12 +13016,18 @@
                         "type": "string",
                         "pattern": "^(?:T-)?[0-9]{1,12}$",
                         "description": "Task short id, e.g. `T-123` (a bare `123` is also accepted on input).",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     },
                     "title": {
                         "type": "string",
                         "description": "The other task's title (its current version).",
-                        "example": "Ship the public API"
+                        "example": "Ship the public API",
+                        "examples": [
+                            "Ship the public API"
+                        ]
                     },
                     "status": {
                         "$ref": "#/components/schemas/TaskStatus"
@@ -11360,7 +13108,10 @@
                     "task_id": {
                         "type": "string",
                         "description": "The planned task's short id.",
-                        "example": "T-123"
+                        "example": "T-123",
+                        "examples": [
+                            "T-123"
+                        ]
                     },
                     "title": {
                         "type": "string",
@@ -11468,17 +13219,27 @@
                     },
                     "file_name": {
                         "type": "string",
-                        "example": "screenshot.png"
+                        "example": "screenshot.png",
+                        "examples": [
+                            "screenshot.png"
+                        ]
                     },
                     "content_type": {
                         "type": "string",
-                        "example": "image/png"
+                        "example": "image/png",
+                        "examples": [
+                            "image/png"
+                        ]
                     },
                     "size": {
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
-                        "description": "File size in bytes."
+                        "description": "File size in bytes.",
+                        "example": 248312,
+                        "examples": [
+                            248312
+                        ]
                     },
                     "created_at": {
                         "type": "string",
@@ -11547,6 +13308,215 @@
                 ],
                 "additionalProperties": false,
                 "description": "A short-lived presigned download URL."
+            },
+            "NoteList": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NotePreview"
+                        },
+                        "description": "The current page of results."
+                    },
+                    "has_more": {
+                        "type": "boolean",
+                        "description": "True when another page exists after this one."
+                    },
+                    "next_cursor": {
+                        "description": "Opaque cursor for the next page (pass as `after`); null on the last page.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "data",
+                    "has_more",
+                    "next_cursor"
+                ],
+                "additionalProperties": false,
+                "description": "Cursor-envelope page of an organization's shared notes."
+            },
+            "NotePreview": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Stable opaque note id."
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Note title."
+                    },
+                    "preview": {
+                        "type": "string",
+                        "description": "Plain-text start of the body, truncated when longer than the preview limit."
+                    },
+                    "length": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Character count of the full body.",
+                        "example": 1840,
+                        "examples": [
+                            1840
+                        ]
+                    },
+                    "project_name": {
+                        "description": "Project display name, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "archived": {
+                        "type": "boolean",
+                        "description": "True when the note is archived."
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                        "description": "Last-modified time, ISO-8601 UTC."
+                    },
+                    "updated_by_name": {
+                        "description": "Display name of the last editor.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "preview",
+                    "length",
+                    "project_name",
+                    "archived",
+                    "updated_at",
+                    "updated_by_name"
+                ],
+                "additionalProperties": false,
+                "description": "A note as it appears in a list — a truncated preview, never the full body."
+            },
+            "Note": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Stable opaque note id."
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Note title, unique within the organization.",
+                        "example": "Deployment runbook",
+                        "examples": [
+                            "Deployment runbook"
+                        ]
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Full note body (plain text or Markdown). Only returned by the get-one endpoint; list returns a preview."
+                    },
+                    "project_id": {
+                        "description": "Project the note belongs to, or null when workspace-wide.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "project_name": {
+                        "description": "Project display name, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "archived": {
+                        "type": "boolean",
+                        "description": "True when the note is archived."
+                    },
+                    "length": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Character count of the full body.",
+                        "example": 1840,
+                        "examples": [
+                            1840
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                        "description": "Last-modified time, ISO-8601 UTC."
+                    },
+                    "updated_by_name": {
+                        "description": "Display name of the last person or agent who wrote to this note.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "body",
+                    "project_id",
+                    "project_name",
+                    "archived",
+                    "length",
+                    "updated_at",
+                    "updated_by_name"
+                ],
+                "additionalProperties": false,
+                "description": "A workspace shared note."
+            },
+            "TaskNoteResult": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "Task id."
+                    },
+                    "short_id": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Human-readable short id.",
+                        "example": 123,
+                        "examples": [
+                            123
+                        ]
+                    },
+                    "notes_length": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Character count of the notes after the append.",
+                        "example": 512,
+                        "examples": [
+                            512
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Human-readable confirmation."
+                    }
+                },
+                "required": [
+                    "task_id",
+                    "short_id",
+                    "notes_length",
+                    "message"
+                ],
+                "additionalProperties": false,
+                "description": "Result of appending to a task note."
             },
             "WebhookEndpointList": {
                 "type": "object",
@@ -11685,7 +13655,10 @@
                     "secret": {
                         "type": "string",
                         "description": "The signing secret (`whsec_…`) — shown EXACTLY ONCE. Store it now; it cannot be retrieved again, only rotated. Note: replaying this exact request within the 24h Idempotency-Key window returns this SAME secret again — treat a stored Idempotency-Key as equally sensitive to the secret itself.",
-                        "example": "whsec_51f3...redacted"
+                        "example": "whsec_51f3...redacted",
+                        "examples": [
+                            "whsec_51f3...redacted"
+                        ]
                     }
                 },
                 "required": [
@@ -11764,7 +13737,10 @@
                     "secret": {
                         "type": "string",
                         "description": "The NEW signing secret — shown EXACTLY ONCE.",
-                        "example": "whsec_51f3...redacted"
+                        "example": "whsec_51f3...redacted",
+                        "examples": [
+                            "whsec_51f3...redacted"
+                        ]
                     },
                     "previous_secret_expires_at": {
                         "type": "string",
@@ -11797,9 +13773,13 @@
                     },
                     "status": {
                         "description": "The HTTP status the endpoint returned, when a response was received at all (absent for a blocked/timed-out/network-failed probe).",
+                        "example": 200,
                         "type": "integer",
                         "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
+                        "maximum": 9007199254740991,
+                        "examples": [
+                            200
+                        ]
                     },
                     "reason": {
                         "description": "Present when `verified` is false — why the probe failed.",
@@ -11820,15 +13800,23 @@
                     },
                     "status": {
                         "description": "The HTTP status returned, when a response was received.",
+                        "example": 200,
                         "type": "integer",
                         "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
+                        "maximum": 9007199254740991,
+                        "examples": [
+                            200
+                        ]
                     },
                     "duration_ms": {
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
-                        "description": "Wall-clock time the probe took."
+                        "description": "Wall-clock time the probe took.",
+                        "example": 184,
+                        "examples": [
+                            184
+                        ]
                     }
                 },
                 "required": [
@@ -11901,7 +13889,11 @@
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
-                        "description": "Number of delivery attempts made so far."
+                        "description": "Number of delivery attempts made so far.",
+                        "example": 1,
+                        "examples": [
+                            1
+                        ]
                     },
                     "last_status": {
                         "anyOf": [
@@ -11914,7 +13906,11 @@
                                 "type": "null"
                             }
                         ],
-                        "description": "HTTP status of the most recent attempt, or null before any attempt has run."
+                        "description": "HTTP status of the most recent attempt, or null before any attempt has run.",
+                        "example": 200,
+                        "examples": [
+                            200
+                        ]
                     },
                     "next_attempt_at": {
                         "anyOf": [
@@ -11956,7 +13952,11 @@
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991,
-                        "description": "How many FRESH PENDING deliveries this call created (capped at 1000 per call)."
+                        "description": "How many FRESH PENDING deliveries this call created (capped at 1000 per call).",
+                        "example": 3,
+                        "examples": [
+                            3
+                        ]
                     }
                 },
                 "required": [
@@ -11970,7 +13970,7 @@
             "bearerAuth": {
                 "type": "http",
                 "scheme": "bearer",
-                "description": "A `gid_` API key (Settings → API keys) or an OAuth 2.1 access token."
+                "description": "A `gid_` API key ([Profile → API Keys](https://app.nowgetitdone.com/settings/api-keys)) or an OAuth 2.1 access token."
             }
         }
     }

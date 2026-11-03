@@ -15,6 +15,8 @@
   "archived": true,
   "created_at": "2026-08-05T12:00:00.000Z",
   "updated_at": "2026-08-05T12:00:00.000Z",
+  "created_via": "API_KEY",
+  "client_label": "Claude Code",
   "recurrence": {
     "frequency": "WEEKLY",
     "interval": 1,

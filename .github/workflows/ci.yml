@@ -96,7 +96,7 @@ jobs:
           assert marker.is_file(), 'py.typed missing from the wheel'
           client = GetItDone(api_key='gid_smoke')
           assert client.base_url == 'https://app.nowgetitdone.com'
-          for name in ('organizations','members','projects','tasks','daily_plan','attachments','api_keys','webhook_endpoints','usage'):
+          for name in ('organizations','members','projects','tasks','notes','daily_plan','attachments','api_keys','webhook_endpoints','usage'):
               assert hasattr(client, name), name
           print('wheel smoke OK', getitdone_py.__version__)
           "

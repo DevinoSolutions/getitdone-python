@@ -18,6 +18,7 @@ from getitdone_py.resources.api_keys import ApiKeys, AsyncApiKeys
 from getitdone_py.resources.attachments import AsyncAttachments, Attachments
 from getitdone_py.resources.daily_plan import AsyncDailyPlan, DailyPlan
 from getitdone_py.resources.members import AsyncMembers, Members
+from getitdone_py.resources.notes import AsyncNotes, Notes
 from getitdone_py.resources.organizations import AsyncOrganizations, Organizations
 from getitdone_py.resources.projects import AsyncProjects, Projects
 from getitdone_py.resources.tasks import AsyncTasks, Tasks
@@ -96,6 +97,7 @@ class GetItDone:
         self.members = Members(self._core)
         self.projects = Projects(self._core)
         self.tasks = Tasks(self._core)
+        self.notes = Notes(self._core)
         self.daily_plan = DailyPlan(self._core)
         self.attachments = Attachments(self._core)
         self.api_keys = ApiKeys(self._core)
@@ -174,6 +176,7 @@ class AsyncGetItDone:
         self.members = AsyncMembers(self._core)
         self.projects = AsyncProjects(self._core)
         self.tasks = AsyncTasks(self._core)
+        self.notes = AsyncNotes(self._core)
         self.daily_plan = AsyncDailyPlan(self._core)
         self.attachments = AsyncAttachments(self._core)
         self.api_keys = AsyncApiKeys(self._core)

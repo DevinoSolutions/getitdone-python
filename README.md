@@ -3,7 +3,7 @@
 The official Python SDK for the [GetItDone](https://nowgetitdone.com) API — AI-native task
 management for people and agents.
 
-All 42 `/v1` operations, fully typed (`py.typed`), **sync and async**, on `httpx`. Automatic
+All 48 `/v1` operations, fully typed (`py.typed`), **sync and async**, on `httpx`. Automatic
 retries, automatic `Idempotency-Key` handling, cursor auto-pagination, a typed RFC 9457 error
 hierarchy, and a Standard Webhooks verifier.
 
@@ -77,7 +77,8 @@ asyncio.run(main())
 | `client.organizations` | `list`, `retrieve` |
 | `client.members` | `list` |
 | `client.projects` | `list`, `retrieve`, `create` |
-| `client.tasks` | `list`, `retrieve`, `create`, `update`, `archive`, `unarchive`, `list_history`, `retrieve_dependencies`, `add_dependency`, `remove_dependency`, `list_occurrences`, `set_occurrence_status` |
+| `client.tasks` | `list`, `retrieve`, `create`, `update`, `archive`, `unarchive`, `list_history`, `retrieve_dependencies`, `add_dependency`, `remove_dependency`, `list_occurrences`, `set_occurrence_status`, `append_note` |
+| `client.notes` | `list`, `retrieve`, `create`, `update`, `append` |
 | `client.daily_plan` | `retrieve`, `set_status`, `create_entry`, `move_entry`, `delete_entry` |
 | `client.attachments` | `list`, `create_upload`, `create`, `get_download_url` |
 | `client.api_keys` | `list`, `create`, `delete` |
@@ -89,7 +90,7 @@ Webhook-endpoint operations require a **PRO or higher** plan; on a lower plan th
 
 ## Pagination
 
-The ten list operations are cursor-paginated. Iterating walks every page for you, re-sending
+The eleven list operations are cursor-paginated. Iterating walks every page for you, re-sending
 your original query verbatim and only advancing the cursor:
 
 ```python
@@ -111,7 +112,7 @@ The async twin is `async for task in client.tasks.list(): ...`, with `await pagi
 
 ## Idempotency
 
-Eleven POSTs are declared idempotent by the API. For those the SDK generates an `Idempotency-Key`
+Twelve POSTs are declared idempotent by the API. For those the SDK generates an `Idempotency-Key`
 **once per logical call**, so a retried request replays the stored result instead of executing
 twice. Supply your own key to make a retry safe across process restarts:
 
@@ -156,7 +157,7 @@ except APIError as error:
 | 401 | `AuthenticationError` | `missing_credentials`, `invalid_api_key`, `invalid_token` |
 | 403 | `PermissionDeniedError` | `insufficient_scope`, `feature_not_enabled` |
 | 404 | `NotFoundError` | `resource_not_found` |
-| 409 | `ConflictError` | `idempotency_in_progress`, `delivery_already_pending` |
+| 409 | `ConflictError` | `idempotency_in_progress`, `delivery_already_pending`, `conflict` (a stale `base_updated_at` on `notes.update`), `dependency_cycle` |
 | 422 | `UnprocessableEntityError` | `idempotency_key_reused`, `webhook_url_rejected` |
 | 429 | `RateLimitError` | `rate_limited`, `quota_exhausted` |
 | 5xx | `InternalServerError` | `internal_error` |
